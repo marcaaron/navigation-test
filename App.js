@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import _ from 'underscore';
 import * as React from 'react';
 import {NavigationContainer, DefaultTheme, CommonActions, getStateFromPath, useFocusEffect} from '@react-navigation/native';
 import {Text, View, Image, Pressable, Linking, Platform, BackHandler, Dimensions} from 'react-native';
@@ -28,6 +29,21 @@ const config = {
 const linking = {
   prefixes: ['http://localhost', 'https://navigation-test-lime.vercel.app'],
   config,
+  getStateFromPath(path, cfg) {
+    const state = getStateFromPath(path, cfg);
+    console.log('Get state from path: ', state);
+
+    // We need to add the LHN if it does not exist
+    if (!_.find(state.routes, r => r.name === 'LeftHandNav')) {
+      state.routes.splice(0, 0, {name: 'LeftHandNav'});
+    }
+
+    if (!_.find(state.routes, r => r.name === 'Chat')) {
+      state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
+    }
+
+    return state;
+  }
 };
 
 const isSmallScreenWidth = Dimensions.get('window').width <= 375;
