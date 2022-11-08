@@ -1,9 +1,10 @@
 import 'react-native-gesture-handler';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme, CommonActions, getStateFromPath} from '@react-navigation/native';
-import {Text, View, Image, Pressable, Linking, Platform} from 'react-native';
+import {NavigationContainer, DefaultTheme, CommonActions, getStateFromPath, useFocusEffect} from '@react-navigation/native';
+import {Text, View, Image, Pressable, Linking, Platform, BackHandler, Dimensions} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
+import createWebNavigator from './createWebNavigator';
 
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
 const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
@@ -25,20 +26,41 @@ const config = {
 };
 
 const linking = {
-  prefixes: ['http://localhost'],
+  prefixes: ['http://localhost', 'https://navigation-test-lime.vercel.app'],
   config,
 };
 
+const isSmallScreenWidth = Dimensions.get('window').width <= 375;
+
+/**
+ * By default the back handler will pop. We want it to go "back" instead of "up". All screens that are inside a nested navigator
+ * except the root screen of that nested navigator will need to implement this.
+ */
+function WithCustomBackBehavior(props) {
+  useFocusEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      props.navigation.popToTop();
+    });
+
+    return () => subscription.remove();
+  });
+
+  return props.children;
+}
 function LeftHandNav({navigation}) {
   return (
     <View style={{flex: 1}}>
       <LHNHeader navigation={navigation} />
       <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 1})}>
-        <Image style={{width: 45, height: 45, borderRadius: '50%', marginRight: 10}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
+        <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
+          <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
+        </View>
         <Text style={chatTitleStyle}>Chat One</Text>
       </Pressable>
       <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 2})}>
-        <Image style={{width: 45, height: 45, borderRadius: '50%', marginRight: 10}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
+        <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
+          <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
+        </View>
         <Text style={chatTitleStyle}>Chat Two</Text>
       </Pressable>
     </View>
@@ -47,20 +69,22 @@ function LeftHandNav({navigation}) {
 
 function AboutScreen({navigation}) {
   return (
-    <View style={{margin: 10}}>
-      <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-        <Pressable onPress={() => navigation.pop()}>
-          <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
-        </Pressable>
-        <Text style={titleStyle}>About</Text>
+    <WithCustomBackBehavior navigation={navigation}>
+      <View style={{margin: 10}}>
+        <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
+          <Pressable onPress={() => navigation.pop()}>
+            <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
+          </Pressable>
+          <Text style={titleStyle}>About</Text>
+        </View>
+        <Text style={{fontSize: 20, marginBottom: 20}}>Welcome to my test app</Text>
+        <Pressable
+            onPress={() => navigation.push('Chat', {id: 1})}
+          >
+            <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
+          </Pressable>
       </View>
-      <Text style={{fontSize: 20, marginBottom: 20}}>Welcome to my test app</Text>
-      <Pressable
-          onPress={() => navigation.push('Chat', {id: 1})}
-        >
-          <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
-        </Pressable>
-    </View>
+    </WithCustomBackBehavior>
   );
 }
 
@@ -73,7 +97,9 @@ function LHNHeader(props) {
           <Image style={{width: 30, height: 30}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/search.png'}} />
         </Pressable>
         <Pressable onPress={() => props.navigation.push('SettingsStack')}>
-          <Image style={{width: 45, height: 45, borderRadius: '50%'}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
+          <View style={{borderRadius: 22.5, overflow: 'hidden'}}>
+            <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
+          </View>
         </Pressable>
       </View>
     </View>
@@ -82,23 +108,27 @@ function LHNHeader(props) {
 
 function SearchScreen({navigation}) {
   return (
-    <View style={{margin: 10}}>
-      <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
+      <View style={{margin: 10}}>
+        <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
+          <Pressable onPress={() => navigation.goBack()}>
+            <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
+          </Pressable>
+          <Text style={titleStyle}>Search</Text>
+        </View>
+        <Text style={{marginBottom: 20}}>Search Results: </Text>
+        <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 1})}>
+          <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
+            <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
+          </View>
+          <Text style={chatTitleStyle}>Chat One</Text>
         </Pressable>
-        <Text style={titleStyle}>Search</Text>
+        <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 2})}>
+          <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
+            <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
+          </View>
+          <Text style={chatTitleStyle}>Chat Two</Text>
+        </Pressable>
       </View>
-      <Text style={{marginBottom: 20}}>Search Results: </Text>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 1})}>
-        <Image style={{width: 45, height: 45, borderRadius: '50%', marginRight: 10}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
-        <Text style={chatTitleStyle}>Chat One</Text>
-      </Pressable>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 2})}>
-        <Image style={{width: 45, height: 45, borderRadius: '50%', marginRight: 10}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
-        <Text style={chatTitleStyle}>Chat Two</Text>
-      </Pressable>
-    </View>
   );
 }
 
@@ -123,17 +153,21 @@ function ChatScreen({route, navigation}) {
   return (
     <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-start'}}>
-          <Pressable onPress={() => {
-              if (navigation.canGoBack()) {
-                navigation.goBack();
-                return;
-              }
+          {isSmallScreenWidth && (
+              <Pressable onPress={() => {
+                if (navigation.canGoBack()) {
+                  navigation.goBack();
+                  return;
+                }
 
-              console.error('On the chat screen but nowhere to go back to. We should always at least have the LHN to go back to');
-          }}>
-            <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
-          </Pressable>
-          <Image style={{width: 45, height: 45, borderRadius: '50%', marginRight: 10}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
+                console.error('On the chat screen but nowhere to go back to. We should always at least have the LHN to go back to');
+            }}>
+              <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
+            </Pressable>
+          )}
+          <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
+            <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
+          </View>
           <Text style={{fontSize: 24}}>Chat with Person {route.params.id}</Text>
         </View>
         <Pressable
@@ -169,8 +203,7 @@ function ChatScreen({route, navigation}) {
   );
 }
 
-const Stack = createNativeStackNavigator();
-
+const Stack = isSmallScreenWidth ? createNativeStackNavigator() : createWebNavigator();
 const SettingsStack = createNativeStackNavigator();
 
 const SettingsStackNavigator = () => (
@@ -217,6 +250,11 @@ export default class App extends React.Component {
       // Since About is in a Settings stack we want the "up" button to go back to the Settings main page and so need to define this
       if (pathname === '/settings/about') {
         state.routes[1].state.routes.unshift({name: 'Settings'});
+      }
+
+      // Add a report when we are on large format web and a chat does not exist in the route
+      if (!isSmallScreenWidth && !state.routes.find(route => route.name === 'Chat')) {
+          state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
       }
 
       this.setState({initialState: state});
