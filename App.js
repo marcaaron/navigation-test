@@ -46,7 +46,7 @@ const linking = {
   }
 };
 
-const isSmallScreenWidth = Dimensions.get('window').width <= 375;
+const isSmallScreenWidth = Dimensions.get('window').width <= 800;
 
 /**
  * By default the back handler will pop. We want it to go "back" instead of "up". All screens that are inside a nested navigator
@@ -63,6 +63,7 @@ function WithCustomBackBehavior(props) {
 
   return props.children;
 }
+
 function LeftHandNav({navigation}) {
   return (
     <View style={{flex: 1}}>
@@ -78,6 +79,12 @@ function LeftHandNav({navigation}) {
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
         </View>
         <Text style={chatTitleStyle}>Chat Two</Text>
+      </Pressable>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 3})}>
+        <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
+          <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
+        </View>
+        <Text style={chatTitleStyle}>Chat Three</Text>
       </Pressable>
     </View>
   );
