@@ -55,7 +55,7 @@ function CustomStackNavigator(props) {
                     return (
                         <View
                             key={route.key}
-                            style={{position: 'fixed', width: '100%', height: '100%'}}
+                            style={{width: '100%', height: '100%', position: 'absolute'}}
                         >
                             <View style={{flexDirection: 'row', width: '100%', height: '100%'}}>
                                 <Pressable style={{flex: 1}} onPress={() => navigation.goBack()}>
