@@ -105,7 +105,12 @@ function AboutScreen({navigation}) {
             onPress={() => navigation.push('Chat', {id: 1})}
           >
             <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
-          </Pressable>
+        </Pressable>
+        <Pressable
+            onPress={() => navigation.push('Search')}
+          >
+            <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to Search page</Text>
+        </Pressable>
       </View>
     </WithCustomBackBehavior>
   );
