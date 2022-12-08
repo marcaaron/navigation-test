@@ -14,7 +14,7 @@ const titleStyle = {fontSize: 24, fontWeight: 'bold', flex: 1};
 const config = {
   initialRouteName: '',
   screens: {
-    Chat: 'r/:id',
+    Chat: 'r/:id?',
     LeftHandNav: '',
     SettingsStack: {
       screens: {
@@ -321,7 +321,8 @@ export default class App extends React.Component {
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  options={{headerShown: false}} />
+                  options={{headerShown: false}}
+                  initialParams={{ id: 1 }} />
                 <Stack.Screen name="Search" component={SearchScreen} options={{headerShown: false}} />
                 <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} options={{headerShown: false}} />
             </Stack.Navigator>
