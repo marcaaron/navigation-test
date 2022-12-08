@@ -316,7 +316,8 @@ export default class App extends React.Component {
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  options={{headerShown: false}} />
+                  options={{headerShown: false}} 
+                  getId={({ params }) => params.id}/>
                 <Stack.Screen name="Search" component={SearchScreen} options={{headerShown: false}} />
                 <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} options={{headerShown: false}} />
             </Stack.Navigator>
