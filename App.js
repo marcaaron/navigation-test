@@ -95,7 +95,7 @@ function AboutScreen({navigation}) {
     <WithCustomBackBehavior navigation={navigation}>
       <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Pressable onPress={() => navigation.pop()}>
+          <Pressable onPress={() => navigation.replace("Settings")}>
             <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
           </Pressable>
           <Text style={titleStyle}>About</Text>
@@ -206,23 +206,24 @@ function ChatScreen({route, navigation}) {
         <Pressable
           onPress={() => {
             // This is fairly complex but seems to be the way we can "push" a new stack on and add the Settings screen in the routes
-            navigation.dispatch((state) => {
-              const newState = {...state};
-              const routes = [...newState.routes];
-              routes.push({
-                name: 'SettingsStack',
-                state: {
-                  index: 1,
-                  routes: [{name: 'Settings'}, {name: 'About'}]
-                }
-              });
-              const newestState = {
-                ...newState,
-                routes,
-                index: routes.length - 1,
-              };
-              return CommonActions.reset(newestState);
-            });
+            // navigation.dispatch((state) => {
+            //   const newState = {...state};
+            //   const routes = [...newState.routes];
+            //   routes.push({
+            //     name: 'SettingsStack',
+            //     state: {
+            //       index: 1,
+            //       routes: [{name: 'Settings'}, {name: 'About'}]
+            //     }
+            //   });
+            //   const newestState = {
+            //     ...newState,
+            //     routes,
+            //     index: routes.length - 1,
+            //   };
+            //   return CommonActions.reset(newestState);
+            // });
+            navigation.push('SettingsStack', { screen: 'About' });
           }}
         >
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to About</Text>
