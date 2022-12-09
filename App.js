@@ -204,27 +204,7 @@ function ChatScreen({route, navigation}) {
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
         </Pressable>
         <Pressable
-          onPress={() => {
-            // This is fairly complex but seems to be the way we can "push" a new stack on and add the Settings screen in the routes
-            // navigation.dispatch((state) => {
-            //   const newState = {...state};
-            //   const routes = [...newState.routes];
-            //   routes.push({
-            //     name: 'SettingsStack',
-            //     state: {
-            //       index: 1,
-            //       routes: [{name: 'Settings'}, {name: 'About'}]
-            //     }
-            //   });
-            //   const newestState = {
-            //     ...newState,
-            //     routes,
-            //     index: routes.length - 1,
-            //   };
-            //   return CommonActions.reset(newestState);
-            // });
-            navigation.push('SettingsStack', { screen: 'About' });
-          }}
+          onPress={() => navigation.push('SettingsStack', { screen: 'About' })}
         >
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to About</Text>
         </Pressable>
