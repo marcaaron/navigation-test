@@ -116,15 +116,15 @@ function AboutScreen({navigation}) {
   );
 }
 
-function LHNHeader(props) {
+function LHNHeader({navigation}) {
   return (
     <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
       <Text style={{fontSize: 24, fontWeight: 'bold', marginLeft: 10}}>Chats</Text>
       <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginRight: 10, marginTop: 10}}>
-        <Pressable style={{marginRight: 20}} onPress={() => props.navigation.push('Search')}>
+        <Pressable style={{marginRight: 20}} onPress={() => navigation.push('Search')}>
           <Image style={{width: 30, height: 30}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/search.png'}} />
         </Pressable>
-        <Pressable onPress={() => props.navigation.push('SettingsStack')}>
+        <Pressable onPress={() => navigation.push('SettingsStack')}>
           <View style={{borderRadius: 22.5, overflow: 'hidden'}}>
             <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
           </View>
@@ -204,7 +204,7 @@ function ChatScreen({route, navigation}) {
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
         </Pressable>
         <Pressable
-          onPress={() => navigation.push('SettingsStack', { screen: 'About' })}
+          onPress={() => navigation.push('SettingsStack', { screen: 'About', initial: false })}
         >
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to About</Text>
         </Pressable>
@@ -297,16 +297,38 @@ export default class App extends React.Component {
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
-                  options={{headerShown: false}}
+                  options={{
+                    headerShown: false,
+                    type: 'card'
+                  }}
                 />
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  options={{headerShown: false}}
+                  options={{
+                    headerShown: false,
+                    type: 'card'
+                  }}
                   initialParams={{ id: 1 }} 
                   getId={({ params }) => params.id} />
-                <Stack.Screen name="Search" component={SearchScreen} options={{headerShown: false}} />
-                <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} options={{headerShown: false}} />
+                <Stack.Group screenOptions={{ type: 'modal' }}>
+                  <Stack.Screen
+                    name="Search"
+                    component={SearchScreen}
+                    options={{
+                      headerShown: false,
+                      type: 'card'
+                    }}
+                  />
+                  <Stack.Screen
+                    name="SettingsStack"
+                    component={SettingsStackNavigator}
+                    options={{
+                      headerShown: false,
+                      type: 'card'
+                    }}
+                  />
+                </Stack.Group>
             </Stack.Navigator>
           </NavigationContainer>
         </View>
