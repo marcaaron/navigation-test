@@ -1,7 +1,10 @@
 import _ from 'underscore';
 import * as React from 'react';
-import {View, Pressable} from 'react-native';
+import {View, Pressable, Dimensions} from 'react-native';
 import {useNavigationBuilder, createNavigatorFactory, StackRouter} from '@react-navigation/native';
+
+const isSmallScreenWidth = Dimensions.get('window').width <= 800;
+
 
 function CustomStackNavigator(props) {
     const {navigation, state, descriptors, NavigationContent} = useNavigationBuilder(StackRouter, {
@@ -13,16 +16,15 @@ function CustomStackNavigator(props) {
     const lastChatIndex = _.findLastIndex(state.routes, {name: 'Chat'});
     const lastRHPIndex = _.findLastIndex(state.routes, (route) => route.name !== 'Chat' && route.name !== 'LeftHandNav');
     const isRHPOnTopOfStack = lastRHPIndex === state.index;
-    console.log(state)
     return (
         <NavigationContent>
             <View style={{flexDirection: 'row', flex: 1}}>
                 {state.routes.map((route, i) => {
-                    if (route.name === 'LeftHandNav') {
+                    if (route.name === 'LeftHandNav' && (i === state.index || !isSmallScreenWidth)) {
                         return (
                             <View
                                 key={route.key}
-                                style={{...descriptors[route.key].options.extraStyle, flex: 1, }}
+                                style={{...descriptors[route.key].options.extraStyle[route.name], flex: 1, }}
                             >
                                 {descriptors[route.key].render()}
                             </View>
@@ -38,7 +40,7 @@ function CustomStackNavigator(props) {
                         return (
                             <View
                                 key={route.key}
-                                style={{flex: 1}}
+                                style={{flex: 1, ...descriptors[route.key].options.extraStyle[route.name],}}
                             >
                                 {descriptors[route.key].render()}
                             </View>

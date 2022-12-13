@@ -290,6 +290,42 @@ export default class App extends React.Component {
     });
   }
   render() {
+    const extraStyle = {};
+    if (isSmallScreenWidth) {
+      extraStyle['LeftHandNav'] = {
+        maxWidth: Dimensions.get('window').width,
+        borderRightWidth: 0
+      }
+      extraStyle['Chat'] = {
+        maxWidth: Dimensions.get('window').width
+      }
+      extraStyle['Search'] = {
+        
+      },
+      extraStyle['Settings'] = {
+        
+      }
+      extraStyle['About'] = {
+        
+      }
+    } else {
+      extraStyle['LeftHandNav'] = {
+        maxWidth: 350,
+        borderRightWidth: 1
+      }
+      extraStyle['Chat'] = {
+        
+      }
+      extraStyle['Search'] = {
+        
+      },
+      extraStyle['Settings'] = {
+        
+      }
+      extraStyle['About'] = {
+        
+      }
+    }
     if (!this.state.initialState) {
       return null;
     }
@@ -312,12 +348,11 @@ export default class App extends React.Component {
           >
             <Stack.Navigator
               initialRouteName="LeftHandNav"
-              screenOptions={{headersShown: false}}
+              screenOptions={{headersShown: false, extraStyle, }}
             >
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
-                  options={{extraStyle: { maxWidth: isSmallScreenWidth ? Dimensions.get('window').width : 350, borderRightWidth: isSmallScreenWidth ? 0 : 1}}}
                 />
                 <Stack.Screen
                   name="Chat"
