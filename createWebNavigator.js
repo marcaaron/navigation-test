@@ -55,14 +55,14 @@ function CustomStackNavigator(props) {
                     if (!isRHPOnTopOfStack) {
                         return null;
                     }
-
+                    
                     return (
                         <View
                             key={route.key}
-                            style={{ width: '100%', height: '100%', position: 'absolute' }}
+                            style={{...descriptors[route.key].options.extraStyle.RHP.container}}
                         >
                             <RHPContainer navigation={navigation}>
-                                <View style={{ width: 375 }}>
+                                <View style={{...descriptors[route.key].options.extraStyle.RHP.content}}>
                                     {descriptors[route.key].render()}
                                 </View>
                             </RHPContainer>

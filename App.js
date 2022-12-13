@@ -299,14 +299,13 @@ export default class App extends React.Component {
       extraStyle['Chat'] = {
         maxWidth: Dimensions.get('window').width
       }
-      extraStyle['Search'] = {
-        
-      },
-      extraStyle['Settings'] = {
-        
-      }
-      extraStyle['About'] = {
-        
+      extraStyle['RHP'] = {
+        container: {
+          width: '100%', height: '100%', position: 'absolute'
+        },
+        content: {
+            width: '100%',
+        }
       }
     } else {
       extraStyle['LeftHandNav'] = {
@@ -316,14 +315,13 @@ export default class App extends React.Component {
       extraStyle['Chat'] = {
         
       }
-      extraStyle['Search'] = {
-        
-      },
-      extraStyle['Settings'] = {
-        
-      }
-      extraStyle['About'] = {
-        
+      extraStyle['RHP'] = {
+        container: {
+          width: '100%', height: '100%', position: 'absolute'
+        },
+        content: {
+            width: 375,
+        }
       }
     }
     if (!this.state.initialState) {
