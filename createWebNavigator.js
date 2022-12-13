@@ -30,6 +30,8 @@ function CustomStackNavigator(props) {
                                 {descriptors[route.key].render()}
                             </View>
                         )
+                    } else if(route.name === 'LeftHandNav') {
+                        return null;
                     }
 
                     // Only show the top-most chat and hide any others
@@ -61,10 +63,8 @@ function CustomStackNavigator(props) {
                             key={route.key}
                             style={{...descriptors[route.key].options.extraStyle.RHP.container}}
                         >
-                            <RHPContainer navigation={navigation}>
-                                <View style={{...descriptors[route.key].options.extraStyle.RHP.content}}>
+                            <RHPContainer navigation={navigation} contentStyle={{...descriptors[route.key].options.extraStyle.RHP.content}}>
                                     {descriptors[route.key].render()}
-                                </View>
                             </RHPContainer>
                         </View>
                     );
