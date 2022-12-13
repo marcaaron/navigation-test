@@ -13,6 +13,7 @@ function CustomStackNavigator(props) {
     const lastChatIndex = _.findLastIndex(state.routes, {name: 'Chat'});
     const lastRHPIndex = _.findLastIndex(state.routes, (route) => route.name !== 'Chat' && route.name !== 'LeftHandNav');
     const isRHPOnTopOfStack = lastRHPIndex === state.index;
+    console.log(state)
     return (
         <NavigationContent>
             <View style={{flexDirection: 'row', flex: 1}}>
@@ -21,7 +22,7 @@ function CustomStackNavigator(props) {
                         return (
                             <View
                                 key={route.key}
-                                style={{maxWidth: 350, flex: 1, borderRightWidth: 1}}
+                                style={{...descriptors[route.key].options.extraStyle, flex: 1, }}
                             >
                                 {descriptors[route.key].render()}
                             </View>

@@ -231,15 +231,16 @@ function ChatScreen({route, navigation}) {
   );
 }
 
-const Stack = isSmallScreenWidth ? createNativeStackNavigator() : createWebNavigator();
+const Stack = createWebNavigator();
 const SettingsStack = createNativeStackNavigator();
 
 const SettingsStackNavigator = () => (
   <SettingsStack.Navigator
     initialRouteName="Settings"
+    screenOptions={{headerShown: false}}
   >
-    <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{headerShown: false}} />
-    <SettingsStack.Screen name="About" component={AboutScreen} options={{headerShown: false}} />
+    <SettingsStack.Screen name="Settings" component={SettingsScreen} />
+    <SettingsStack.Screen name="About" component={AboutScreen} />
   </SettingsStack.Navigator>
 );
 
@@ -288,7 +289,6 @@ export default class App extends React.Component {
       this.setState({initialState: state});
     });
   }
-
   render() {
     if (!this.state.initialState) {
       return null;
@@ -312,19 +312,19 @@ export default class App extends React.Component {
           >
             <Stack.Navigator
               initialRouteName="LeftHandNav"
+              screenOptions={{headersShown: false}}
             >
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
-                  options={{headerShown: false}}
+                  options={{extraStyle: { maxWidth: isSmallScreenWidth ? Dimensions.get('window').width : 350, borderRightWidth: isSmallScreenWidth ? 0 : 1}}}
                 />
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  options={{headerShown: false}}
                   initialParams={{ id: 1 }} />
-                <Stack.Screen name="Search" component={SearchScreen} options={{headerShown: false}} />
-                <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} options={{headerShown: false}} />
+                <Stack.Screen name="Search" component={SearchScreen} />
+                <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} />
             </Stack.Navigator>
           </NavigationContainer>
         </View>
