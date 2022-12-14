@@ -231,7 +231,7 @@ function ChatScreen({route, navigation}) {
   );
 }
 
-const Stack = isSmallScreenWidth ? createNativeStackNavigator() : createWebNavigator();
+const Stack = (isSmallScreenWidth && Platform.OS !== 'web') ? createNativeStackNavigator() : createWebNavigator();
 const SettingsStack = createNativeStackNavigator();
 
 const SettingsStackNavigator = () => (
@@ -313,6 +313,7 @@ export default class App extends React.Component {
             linking={linking}
             theme={navTheme}
             onStateChange={(state) => {
+              console.log('State before calculation', state);
               const lastChatIndex = _.findLastIndex(state.routes, {name: 'Chat'});
               const lastRHPIndex = _.findLastIndex(state.routes, (route) => route.name !== 'Chat' && route.name !== 'LeftHandNav');
               const isRHPOnTopOfStack = lastRHPIndex === state.index;
@@ -323,7 +324,6 @@ export default class App extends React.Component {
                 lastRHPIndex,
                 isRHPOnTopOfStack
               }
-              console.log(lastChatIndex, lastRHPIndex, isRHPOnTopOfStack, this.stateRef, this.stateRef.lastChatIndex)
             }}
             initialState={this.state.initialState}
           >
@@ -334,7 +334,7 @@ export default class App extends React.Component {
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
-                  options={{isLHNVisible: (this.stateRef.state.index === 0 && this.stateRef.routes.length === 1) || !isSmallScreenWidth}}
+                  options={{isLHNVisible: (this.stateRef.state && this.stateRef.state.index === 0 && this.stateRef.routes.length === 1) || !isSmallScreenWidth}}
                 />
                 <Stack.Screen
                   name="Chat"
