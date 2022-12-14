@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import * as React from 'react';
-import {View, Pressable, Dimensions} from 'react-native';
+import {View, Dimensions} from 'react-native';
 import {useNavigationBuilder, createNavigatorFactory, StackRouter} from '@react-navigation/native';
 import RHPContainer from './components/RHPContainer';
 
@@ -8,7 +8,6 @@ const isSmallScreenWidth = Dimensions.get('window').width <= 800;
 
 
 function CustomStackNavigator(props) {
-    console.log('here')
     const {navigation, state, descriptors, NavigationContent} = useNavigationBuilder(StackRouter, {
       children: props.children,
       screenOptions: props.screenOptions,

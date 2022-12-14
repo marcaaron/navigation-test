@@ -257,13 +257,6 @@ export default class App extends React.Component {
     this.state = {
       initialState: null,
     };
-    this.stateRef = React.createRef();
-    this.stateRef.current = {
-      state: null,
-      lastChatIndex: 1,
-      lastRHPIndex: -1,
-      isRHPOnTopOfStack: false,
-    };
   }
 
   componentDidMount() {
@@ -313,17 +306,7 @@ export default class App extends React.Component {
             linking={linking}
             theme={navTheme}
             onStateChange={(state) => {
-              console.log('State before calculation', state);
-              const lastChatIndex = _.findLastIndex(state.routes, {name: 'Chat'});
-              const lastRHPIndex = _.findLastIndex(state.routes, (route) => route.name !== 'Chat' && route.name !== 'LeftHandNav');
-              const isRHPOnTopOfStack = lastRHPIndex === state.index;
-              this.stateRef.current = {
-                ...this.stateRef.current,
-                state,
-                lastChatIndex,
-                lastRHPIndex,
-                isRHPOnTopOfStack
-              }
+              console.log('STATE CHANGED: ', state);
             }}
             initialState={this.state.initialState}
           >
@@ -334,21 +317,15 @@ export default class App extends React.Component {
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
-                  options={{isLHNVisible: (this.stateRef.state && this.stateRef.state.index === 0 && this.stateRef.routes.length === 1) || !isSmallScreenWidth}}
                 />
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  initialParams={{id: 1}} 
-                  options={{chatIndexToRender: this.stateRef.current.lastChatIndex}}/>
-                <Stack.Group
-                  screenOptions={{
-                    isRHPVisible: this.stateRef.current.isRHPOnTopOfStack,
-                  }}
-                  >
-                    <Stack.Screen name="Search" component={SearchScreen} />
-                    <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} />
-                  </Stack.Group>
+                  initialParams={{id: 1}} />
+                <Stack.Group>
+                  <Stack.Screen name="Search" component={SearchScreen} />
+                  <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} />
+                </Stack.Group>
             </Stack.Navigator>
           </NavigationContainer>
         </View>
