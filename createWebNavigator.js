@@ -1,73 +1,58 @@
-import _, { compose } from 'underscore';
+import _ from 'underscore';
 import * as React from 'react';
-import { View, Pressable, Dimensions } from 'react-native';
-import { useNavigationBuilder, createNavigatorFactory, StackRouter } from '@react-navigation/native';
-import RHPContainer from './RHPContainer';
+import {View, Pressable, Dimensions} from 'react-native';
+import {useNavigationBuilder, createNavigatorFactory, StackRouter} from '@react-navigation/native';
+import RHPContainer from './components/RHPContainer';
 
 const isSmallScreenWidth = Dimensions.get('window').width <= 800;
 
 
 function CustomStackNavigator(props) {
-    const { navigation, state, descriptors, NavigationContent } = useNavigationBuilder(StackRouter, {
-        children: props.children,
-        screenOptions: props.screenOptions,
-        initialRouteName: props.initialRouteName,
+    const {navigation, state, descriptors, NavigationContent} = useNavigationBuilder(StackRouter, {
+      children: props.children,
+      screenOptions: props.screenOptions,
+      initialRouteName: props.initialRouteName,
     });
 
-    const lastChatIndex = _.findLastIndex(state.routes, { name: 'Chat' });
-    const lastRHPIndex = _.findLastIndex(state.routes, (route) => route.name !== 'Chat' && route.name !== 'LeftHandNav');
-    const isRHPOnTopOfStack = lastRHPIndex === state.index;
     return (
         <NavigationContent>
-            <View style={{ flexDirection: 'row', flex: 1 }}>
+            <View style={{flexDirection: 'row', flex: 1}}>
                 {state.routes.map((route, i) => {
-                    if (route.name === 'LeftHandNav' && (i === state.index || !isSmallScreenWidth)) {
+                    if (descriptors[route.key].options.isLHNVisible) {
                         return (
                             <View
                                 key={route.key}
-                                style={{ ...descriptors[route.key].options.extraStyle[route.name], flex: 1, }}
-                            >
-                                {descriptors[route.key].render()}
-                            </View>
-                        )
-                    } else if(route.name === 'LeftHandNav') {
-                        return null;
-                    }
-
-                    // Only show the top-most chat and hide any others
-                    if (route.name === 'Chat' && i !== lastChatIndex) {
-                        return null;
-                    }
-
-                    if (route.name === 'Chat') {
-                        return (
-                            <View
-                                key={route.key}
-                                style={{ flex: 1, ...descriptors[route.key].options.extraStyle[route.name], }}
+                                style={{maxWidth: 350, flex: 1, borderRightWidth: 1}}
                             >
                                 {descriptors[route.key].render()}
                             </View>
                         )
                     }
 
-                    if (route.name !== 'Chat' && route.name !== 'LeftHandNav' && i !== lastRHPIndex) {
-                        return null;
+                    if (i === descriptors[route.key].options.chatIndexToRender) {
+                        return (
+                            <View
+                                key={route.key}
+                                style={{flex: 1}}
+                            >
+                                {descriptors[route.key].render()}
+                            </View>
+                        )
                     }
 
-                    if (!isRHPOnTopOfStack) {
-                        return null;
+                    if (descriptors[route.key].options.isRHPVisible) {
+                        return (
+                            <View
+                                key={route.key}
+                                style={{width: '100%', height: '100%', position: 'absolute'}}
+                            >
+                                <RHPContainer navigation={navigation} contentStyle={{flexDirection: 'row', width: '100%', height: '100%'}}>
+                                        {descriptors[route.key].render()}
+                                </RHPContainer>
+                            </View>
+                        );
                     }
-                    
-                    return (
-                        <View
-                            key={route.key}
-                            style={{...descriptors[route.key].options.extraStyle.RHP.container}}
-                        >
-                            <RHPContainer navigation={navigation} contentStyle={{...descriptors[route.key].options.extraStyle.RHP.content}}>
-                                    {descriptors[route.key].render()}
-                            </RHPContainer>
-                        </View>
-                    );
+                    return null;
                 })}
             </View>
         </NavigationContent>
