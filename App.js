@@ -231,7 +231,7 @@ function ChatScreen({route, navigation}) {
   );
 }
 
-const Stack = createWebNavigator();
+const Stack = isSmallScreenWidth ? createNativeStackNavigator() : createWebNavigator();
 const SettingsStack = createNativeStackNavigator();
 
 const SettingsStackNavigator = () => (
@@ -256,6 +256,13 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       initialState: null,
+    };
+    this.stateRef = React.createRef();
+    this.stateRef.current = {
+      state: null,
+      lastChatIndex: 1,
+      lastRHPIndex: -1,
+      isRHPOnTopOfStack: false,
     };
   }
 
@@ -290,40 +297,6 @@ export default class App extends React.Component {
     });
   }
   render() {
-    const extraStyle = {};
-    if (isSmallScreenWidth) {
-      extraStyle['LeftHandNav'] = {
-        maxWidth: Dimensions.get('window').width,
-        borderRightWidth: 0
-      }
-      extraStyle['Chat'] = {
-        maxWidth: Dimensions.get('window').width
-      }
-      extraStyle['RHP'] = {
-        container: {
-          width: '100%', height: '100%'
-        },
-        content: {
-          width: '100%', height: '100%'
-        }
-      }
-    } else {
-      extraStyle['LeftHandNav'] = {
-        maxWidth: 350,
-        borderRightWidth: 1
-      }
-      extraStyle['Chat'] = {
-        
-      }
-      extraStyle['RHP'] = {
-        container: {
-          width: '100%', height: '100%', position: 'absolute'
-        },
-        content: {
-            width: 375,
-        }
-      }
-    }
     if (!this.state.initialState) {
       return null;
     }
@@ -340,24 +313,42 @@ export default class App extends React.Component {
             linking={linking}
             theme={navTheme}
             onStateChange={(state) => {
-              console.log('STATE CHANGED: ', state);
+              const lastChatIndex = _.findLastIndex(state.routes, {name: 'Chat'});
+              const lastRHPIndex = _.findLastIndex(state.routes, (route) => route.name !== 'Chat' && route.name !== 'LeftHandNav');
+              const isRHPOnTopOfStack = lastRHPIndex === state.index;
+              this.stateRef.current = {
+                ...this.stateRef.current,
+                state,
+                lastChatIndex,
+                lastRHPIndex,
+                isRHPOnTopOfStack
+              }
+              console.log(lastChatIndex, lastRHPIndex, isRHPOnTopOfStack, this.stateRef, this.stateRef.lastChatIndex)
             }}
             initialState={this.state.initialState}
           >
             <Stack.Navigator
               initialRouteName="LeftHandNav"
-              screenOptions={{headersShown: false, extraStyle, }}
+              screenOptions={{headersShown: false}}
             >
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
+                  options={{isLHNVisible: (this.stateRef.state.index === 0 && this.stateRef.routes.length === 1) || !isSmallScreenWidth}}
                 />
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  initialParams={{ id: 1 }} />
-                <Stack.Screen name="Search" component={SearchScreen} />
-                <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} />
+                  initialParams={{id: 1}} 
+                  options={{chatIndexToRender: this.stateRef.current.lastChatIndex}}/>
+                <Stack.Group
+                  screenOptions={{
+                    isRHPVisible: this.stateRef.current.isRHPOnTopOfStack,
+                  }}
+                  >
+                    <Stack.Screen name="Search" component={SearchScreen} />
+                    <Stack.Screen name="SettingsStack" component={SettingsStackNavigator} />
+                  </Stack.Group>
             </Stack.Navigator>
           </NavigationContainer>
         </View>
