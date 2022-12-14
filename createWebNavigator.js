@@ -46,7 +46,7 @@ function CustomStackNavigator(props) {
                                 key={route.key}
                                 style={{width: '100%', height: '100%', position: 'absolute'}}
                             >
-                                <RHPContainer navigation={navigation} contentStyle={{flexDirection: 'row', width: '100%', height: '100%'}}>
+                                <RHPContainer navigation={navigation} contentStyle={{width: 375}}>
                                         {descriptors[route.key].render()}
                                 </RHPContainer>
                             </View>

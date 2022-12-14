@@ -323,7 +323,6 @@ export default class App extends React.Component {
                 lastRHPIndex,
                 isRHPOnTopOfStack
               }
-              console.log(lastChatIndex, lastRHPIndex, isRHPOnTopOfStack, this.stateRef, this.stateRef.lastChatIndex)
             }}
             initialState={this.state.initialState}
           >
