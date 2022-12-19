@@ -68,19 +68,19 @@ function LeftHandNav({navigation}) {
   return (
     <View style={{flex: 1}}>
       <LHNHeader navigation={navigation} />
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.navigate('Chat', {id: 1})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 1})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
         </View>
         <Text style={chatTitleStyle}>Chat One</Text>
       </Pressable>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.navigate('Chat', {id: 2})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 2})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
         </View>
         <Text style={chatTitleStyle}>Chat Two</Text>
       </Pressable>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.navigate('Chat', {id: 3})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 3})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
         </View>
@@ -95,7 +95,7 @@ function AboutScreen({navigation}) {
     <WithCustomBackBehavior navigation={navigation}>
       <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Pressable onPress={() => navigation.replace("Settings")}>
+          <Pressable onPress={() => navigation.pop()}>
             <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
           </Pressable>
           <Text style={titleStyle}>About</Text>
@@ -297,36 +297,23 @@ export default class App extends React.Component {
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
-                  options={{
-                    headerShown: false,
-                    type: 'card'
-                  }}
+                  options={{ headerShown: false }}
                 />
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  options={{
-                    headerShown: false,
-                    type: 'card'
-                  }}
-                  initialParams={{ id: 1 }} 
-                  getId={({ params }) => params.id} />
+                  options={{ headerShown: false }}
+                  initialParams={{ id: 1 }} />
                 <Stack.Group screenOptions={{ type: 'modal' }}>
                   <Stack.Screen
                     name="Search"
                     component={SearchScreen}
-                    options={{
-                      headerShown: false,
-                      type: 'card'
-                    }}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="SettingsStack"
                     component={SettingsStackNavigator}
-                    options={{
-                      headerShown: false,
-                      type: 'card'
-                    }}
+                    options={{ headerShown: false }}
                   />
                 </Stack.Group>
             </Stack.Navigator>
