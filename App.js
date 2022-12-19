@@ -297,23 +297,23 @@ export default class App extends React.Component {
                 <Stack.Screen
                   name="LeftHandNav"
                   component={LeftHandNav}
-                  options={{ headerShown: false }}
+                  options={{headerShown: false}}
                 />
                 <Stack.Screen
                   name="Chat"
                   component={ChatScreen}
-                  options={{ headerShown: false }}
+                  options={{headerShown: false}}
                   initialParams={{ id: 1 }} />
-                <Stack.Group screenOptions={{ type: 'modal' }}>
+                <Stack.Group>
                   <Stack.Screen
                     name="Search"
                     component={SearchScreen}
-                    options={{ headerShown: false }}
+                    options={{headerShown: false}}
                   />
                   <Stack.Screen
                     name="SettingsStack"
                     component={SettingsStackNavigator}
-                    options={{ headerShown: false }}
+                    options={{headerShown: false}}
                   />
                 </Stack.Group>
             </Stack.Navigator>
