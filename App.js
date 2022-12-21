@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import _ from 'underscore';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme, CommonActions, getStateFromPath, useFocusEffect} from '@react-navigation/native';
+import {NavigationContainer, DefaultTheme, CommonActions, getStateFromPath, useFocusEffect, useRoute, createNavigationContainerRef, getPathFromState } from '@react-navigation/native';
 import {Text, View, Image, Pressable, Linking, Platform, BackHandler, Dimensions} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
@@ -12,19 +12,40 @@ const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
 const titleStyle = {fontSize: 24, fontWeight: 'bold', flex: 1};
 
 const config = {
-  initialRouteName: '',
+  initialRouteName: 'LeftHandNav',
   screens: {
     Chat: 'r/:id?',
     LeftHandNav: '',
     SettingsStack: {
+      initialRouteName: 'Settings',
+      path: 'settings',
       screens: {
-        Settings: 'settings',
-        About: 'settings/about',
+        Settings: '',
+        About: 'about',
       },
     },
     Search: 'search'
   },
 };
+
+const keysBlocklist = ['key', 'stale', 'routeNames']
+
+const stripNavigationState = (state) => {
+  const rawState = Array.isArray(state) ? [] : {};
+  for (const key of Object.keys(state)) {
+    if (keysBlocklist.includes(key)) {
+      continue
+    }
+    rawState[key] = typeof state[key] === 'object' ? stripNavigationState(state[key]) : state[key]
+  }
+  return rawState 
+}
+
+const addChatRouteIfNecessary = (state) => {
+    if (!_.find(state.routes, r => r.name === 'Chat')) {
+      state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
+    }
+}
 
 const linking = {
   prefixes: ['http://localhost', 'https://navigation-test-lime.vercel.app'],
@@ -32,21 +53,12 @@ const linking = {
   getStateFromPath(path, cfg) {
     const state = getStateFromPath(path, cfg);
     console.log('Get state from path: ', state);
-
-    // We need to add the LHN if it does not exist
-    if (!_.find(state.routes, r => r.name === 'LeftHandNav')) {
-      state.routes.splice(0, 0, {name: 'LeftHandNav'});
-    }
-
-    if (!_.find(state.routes, r => r.name === 'Chat')) {
-      state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
-    }
-
+    addChatRouteIfNecessary(state)
     return state;
   }
 };
 
-const isSmallScreenWidth = Dimensions.get('window').width <= 800;
+const checkIsSmallScreen = (width) => width <= 800;
 
 /**
  * By default the back handler will pop. We want it to go "back" instead of "up". All screens that are inside a nested navigator
@@ -178,10 +190,11 @@ function SettingsScreen({navigation}) {
 }
 
 function ChatScreen({route, navigation}) {
+  const navigatorName = React.useContext(NavigatorNameContext);
   return (
     <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-start'}}>
-          {isSmallScreenWidth && (
+          {navigatorName === NavigatorName.NATIVE_STACK_NAVIGATOR && (
               <Pressable onPress={() => {
                 if (navigation.canGoBack()) {
                   navigation.goBack();
@@ -212,8 +225,16 @@ function ChatScreen({route, navigation}) {
   );
 }
 
-const Stack = isSmallScreenWidth ? createNativeStackNavigator() : createWebNavigator();
+const navigationRef = createNavigationContainerRef()
+
+const WebStack = createWebNavigator();
+const NativeStack = createNativeStackNavigator();
 const SettingsStack = createNativeStackNavigator();
+
+const NavigatorName = {
+  CUSTOM_STACK_NAVIGATOR: 'CustomStackNavigator',
+  NATIVE_STACK_NAVIGATOR: 'NativeStackNavigator',
+}
 
 const SettingsStackNavigator = () => (
   <SettingsStack.Navigator
@@ -231,51 +252,46 @@ const navTheme = {
   },
 };
 
+const NavigatorNameContext = React.createContext();
+ 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      initialState: null,
-    };
+      Stack: checkIsSmallScreen(Dimensions.get('window').width) ? NativeStack : WebStack,
+    }
+  }
+  
+  regenerateNavigationState() {
+      const currentState = navigationRef.getState()
+      const strippedState = stripNavigationState(currentState) 
+      addChatRouteIfNecessary(strippedState)
+      navigationRef.reset(strippedState)
+  }
+  
+  handleResize(e) {
+    const isSmallScreenWidth = checkIsSmallScreen(e.window.width);
+    const navigatorName = this.state.Stack.Navigator.name;
+
+    if (isSmallScreenWidth && navigatorName === NavigatorName.CUSTOM_STACK_NAVIGATOR) {
+      this.regenerateNavigationState()
+      this.setState({Stack: NativeStack})        
+    } else if (!isSmallScreenWidth && this.state.Stack.Navigator.name === NavigatorName.NATIVE_STACK_NAVIGATOR) {
+      this.regenerateNavigationState()
+      this.setState({Stack: WebStack})        
+    }
   }
 
   componentDidMount() {
-    Linking.getInitialURL().then((url) => {
-      if (Platform.OS !== 'web') {
-        this.setState({initialState: getStateFromPath('', config)});
-        return;
-      }
-
-      // From here we'll have a url and we need to build the initial state for the app
-      // This is where things get tricky because if we have a report route then we need to parse the reportID and also make sure a LHN is the root view
-      const pathname = new URL(url).pathname;
-      const state = getStateFromPath(pathname, config);
-
-      // If pathname is a chat then we need to push a left hand nav path
-      if (pathname.startsWith('/r') || pathname.startsWith('/search') || pathname.startsWith('/settings')) {
-        state.routes.unshift({name: 'LeftHandNav'});
-      }
-
-      // Since About is in a Settings stack we want the "up" button to go back to the Settings main page and so need to define this
-      if (pathname === '/settings/about') {
-        state.routes[1].state.routes.unshift({name: 'Settings'});
-      }
-
-      // Add a report when we are on large format web and a chat does not exist in the route
-      if (!isSmallScreenWidth && !state.routes.find(route => route.name === 'Chat')) {
-          state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
-      }
-
-      this.setState({initialState: state});
-    });
+    this.handleResize= this.handleResize.bind(this);
+    Dimensions.addEventListener('change', this.handleResize)
   }
 
   render() {
-    if (!this.state.initialState) {
-      return null;
-    }
+    const Stack = this.state.Stack;
 
     return (
+      <NavigatorNameContext.Provider value={this.state.Stack.Navigator.name}>
         <View style={{
           flex: 1,
           justifyContent: 'center',
@@ -284,12 +300,12 @@ export default class App extends React.Component {
           padding: 8,
         }}>
           <NavigationContainer
+            ref={navigationRef}
             linking={linking}
             theme={navTheme}
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
             }}
-            initialState={this.state.initialState}
           >
             <Stack.Navigator
               initialRouteName="LeftHandNav"
@@ -319,6 +335,7 @@ export default class App extends React.Component {
             </Stack.Navigator>
           </NavigationContainer>
         </View>
+      </NavigatorNameContext.Provider>
     );
   }
 }
