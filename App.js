@@ -1,8 +1,8 @@
 import 'react-native-gesture-handler';
 import _ from 'underscore';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme, CommonActions, getStateFromPath, useFocusEffect, useRoute, createNavigationContainerRef, getPathFromState } from '@react-navigation/native';
-import {Text, View, Image, Pressable, Linking, Platform, BackHandler, Dimensions} from 'react-native';
+import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef } from '@react-navigation/native';
+import {Text, View, Image, Pressable,  BackHandler, Dimensions} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import createWebNavigator from './createWebNavigator';
@@ -10,6 +10,19 @@ import createWebNavigator from './createWebNavigator';
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
 const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
 const titleStyle = {fontSize: 24, fontWeight: 'bold', flex: 1};
+
+const keysBlocklist = ['key', 'stale', 'routeNames']
+
+const stripNavigationState = (state) => {
+  const rawState = Array.isArray(state) ? [] : {};
+  for (const key of Object.keys(state)) {
+    if (keysBlocklist.includes(key)) {
+      continue
+    }
+    rawState[key] = typeof state[key] === 'object' ? stripNavigationState(state[key]) : state[key]
+  }
+  return rawState 
+}
 
 const config = {
   initialRouteName: 'LeftHandNav',
@@ -28,18 +41,6 @@ const config = {
   },
 };
 
-const keysBlocklist = ['key', 'stale', 'routeNames']
-
-const stripNavigationState = (state) => {
-  const rawState = Array.isArray(state) ? [] : {};
-  for (const key of Object.keys(state)) {
-    if (keysBlocklist.includes(key)) {
-      continue
-    }
-    rawState[key] = typeof state[key] === 'object' ? stripNavigationState(state[key]) : state[key]
-  }
-  return rawState 
-}
 
 const addChatRouteIfNecessary = (state) => {
     if (!_.find(state.routes, r => r.name === 'Chat')) {
