@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import _ from 'underscore';
 import * as React from 'react';
 import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef } from '@react-navigation/native';
-import {Text, View, Image, Pressable,  BackHandler, Dimensions} from 'react-native';
+import {Text, View, Image, Pressable,  BackHandler, Dimensions, Platform} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import createWebNavigator from './createWebNavigator';
@@ -43,6 +43,10 @@ const config = {
 
 
 const addChatRouteIfNecessary = (state) => {
+    // we don't want to add Chat route for small screens
+    if (checkIsSmallScreen(Dimensions.get('window').width)) {
+      return 
+    }
     if (!_.find(state.routes, r => r.name === 'Chat')) {
       state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
     }
@@ -264,7 +268,7 @@ export default class App extends React.Component {
   }
   
   regenerateNavigationState() {
-      const currentState = navigationRef.getState()
+      const currentState = navigationRef.getRootState()
       const strippedState = stripNavigationState(currentState) 
       addChatRouteIfNecessary(strippedState)
       navigationRef.reset(strippedState)
@@ -307,6 +311,7 @@ export default class App extends React.Component {
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
             }}
+            initialState={Platform.OS !== 'web' ? linking.getStateFromPath('', config) : undefined}
           >
             <Stack.Navigator
               initialRouteName="LeftHandNav"
