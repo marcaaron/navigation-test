@@ -2,10 +2,11 @@ import 'react-native-gesture-handler';
 import _ from 'underscore';
 import * as React from 'react';
 import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef } from '@react-navigation/native';
-import {Text, View, Image, Pressable,  BackHandler, Dimensions, Platform} from 'react-native';
+import {Text, View, Image, Pressable,  BackHandler, Dimensions, Platform}  from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import createWebNavigator from './createWebNavigator';
+import * as Linking from 'expo-linking';
 
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
 const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
@@ -53,7 +54,7 @@ const addChatRouteIfNecessary = (state) => {
 }
 
 const linking = {
-  prefixes: ['http://localhost', 'https://navigation-test-lime.vercel.app'],
+  prefixes: ['http://localhost', 'https://navigation-test-lime.vercel.app', Linking.createURL('/')],
   config,
   getStateFromPath(path, cfg) {
     const state = getStateFromPath(path, cfg);
@@ -264,6 +265,7 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       Stack: checkIsSmallScreen(Dimensions.get('window').width) ? NativeStack : WebStack,
+      initialState: null,
     }
   }
   
@@ -280,16 +282,26 @@ export default class App extends React.Component {
 
     if (isSmallScreenWidth && navigatorName === NavigatorName.CUSTOM_STACK_NAVIGATOR) {
       this.regenerateNavigationState()
-      this.setState({Stack: NativeStack})        
+      this.setState({...this.state, Stack: NativeStack})        
     } else if (!isSmallScreenWidth && this.state.Stack.Navigator.name === NavigatorName.NATIVE_STACK_NAVIGATOR) {
       this.regenerateNavigationState()
-      this.setState({Stack: WebStack})        
+      this.setState({...this.state, Stack: WebStack})        
     }
+  }
+  
+  handleInitialState(url) {
+    // we don't want to set initialState for web or if application is opened using deeplinks
+    if (Platform.OS !== 'web' && url !== null) {
+      return;
+    }
+    this.setState({...this.state, initialState: linking.getStateFromPath('', config)})
   }
 
   componentDidMount() {
-    this.handleResize= this.handleResize.bind(this);
+    this.handleResize = this.handleResize.bind(this);
+    this.handleInitialState = this.handleInitialState.bind(this);
     Dimensions.addEventListener('change', this.handleResize)
+    Linking.getInitialURL().then(this.handleInitialState)
   }
 
   render() {
@@ -311,7 +323,7 @@ export default class App extends React.Component {
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
             }}
-            initialState={Platform.OS !== 'web' ? linking.getStateFromPath('', config) : undefined}
+            initialState={this.state.initialState}
           >
             <Stack.Navigator
               initialRouteName="LeftHandNav"
