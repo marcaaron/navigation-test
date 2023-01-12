@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "navigation-test",
     "name": "expensify-navigation-test",
     "slug": "snack-4cac37e7-bcd2-4ea0-9cd4-e255739531ab",
     "version": "1.0.0",
