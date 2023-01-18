@@ -31,7 +31,6 @@ const config = {
     Chat: 'r/:id?',
     LeftHandNav: '',
     SettingsStack: {
-      initialRouteName: 'Settings',
       path: 'settings',
       screens: {
         Settings: '',
@@ -58,7 +57,6 @@ const linking = {
   config,
   getStateFromPath(path, cfg) {
     const state = getStateFromPath(path, cfg);
-    console.log('Get state from path: ', state);
     addChatRouteIfNecessary(state)
     return state;
   }
@@ -73,7 +71,7 @@ const checkIsSmallScreen = (width) => width <= 800;
 function WithCustomBackBehavior(props) {
   useFocusEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      props.navigation.popToTop();
+      // props.navigation.popToTop();
     });
 
     return () => subscription.remove();
@@ -113,7 +111,7 @@ function AboutScreen({navigation}) {
     <WithCustomBackBehavior navigation={navigation}>
       <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Pressable onPress={() => navigation.pop()}>
+          <Pressable onPress={() => navigation.replace('Settings')}>
             <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
           </Pressable>
           <Text style={titleStyle}>About</Text>
@@ -187,7 +185,7 @@ function SettingsScreen({navigation}) {
         </Pressable>
         <Text style={titleStyle}>Settings</Text>
       </View>
-      <Pressable style={{flexDirection: 'row', marginTop: 10}} onPress={() => navigation.push('About')}>
+      <Pressable style={{flexDirection: 'row', marginTop: 10}} onPress={() => navigation.replace('About')}>
         <Text style={{fontSize: 24, flex: 1, paddingLeft: 20}}>About</Text>
         <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron-right.png'}} />
       </Pressable>
@@ -223,7 +221,7 @@ function ChatScreen({route, navigation}) {
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
         </Pressable>
         <Pressable
-          onPress={() => navigation.push('SettingsStack', { screen: 'About', initial: false })}
+          onPress={() => navigation.push('SettingsStack', { screen: 'About' })}
         >
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to About</Text>
         </Pressable>
@@ -244,10 +242,12 @@ const NavigatorName = {
 
 const SettingsStackNavigator = () => (
   <SettingsStack.Navigator
-    initialRouteName="Settings"
   >
-    <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{headerShown: false}} />
-    <SettingsStack.Screen name="About" component={AboutScreen} options={{headerShown: false}} />
+    <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{
+      headerShown: false,
+      animationTypeForReplace: 'pop'
+      }} />
+    <SettingsStack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
   </SettingsStack.Navigator>
 );
 
