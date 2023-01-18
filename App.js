@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
-import _ from 'underscore';
+import { find } from 'underscore';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef } from '@react-navigation/native';
+import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef, useNavigationState} from '@react-navigation/native';
 import {Text, View, Image, Pressable,  BackHandler, Dimensions, Platform}  from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
@@ -28,7 +28,10 @@ const stripNavigationState = (state) => {
 const config = {
   initialRouteName: 'LeftHandNav',
   screens: {
-    Chat: 'r/:id?',
+    Chat: { 
+      path: 'r/:id?', 
+      parse: { id: (id) => parseInt(id) } 
+    },
     LeftHandNav: '',
     SettingsStack: {
       path: 'settings',
@@ -42,12 +45,12 @@ const config = {
 };
 
 
-const addChatRouteIfNecessary = (state) => {
+const fixState = (state) => {
     // we don't want to add Chat route for small screens
     if (checkIsSmallScreen(Dimensions.get('window').width)) {
       return 
     }
-    if (!_.find(state.routes, r => r.name === 'Chat')) {
+    if (!find(state.routes, r => r.name === 'Chat')) {
       state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
     }
 }
@@ -57,7 +60,7 @@ const linking = {
   config,
   getStateFromPath(path, cfg) {
     const state = getStateFromPath(path, cfg);
-    addChatRouteIfNecessary(state)
+    fixState(state)
     return state;
   }
 };
@@ -80,23 +83,29 @@ function WithCustomBackBehavior(props) {
   return props.children;
 }
 
+const useFocusedRouteParams = (navigation) => {
+  const state = useNavigationState(state => state)
+  return state.routes?.[state.index]?.params
+}
+
 function LeftHandNav({navigation}) {
+  const focusedRouteParams = useFocusedRouteParams(navigation);
   return (
     <View style={{flex: 1}}>
       <LHNHeader navigation={navigation} />
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 1})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} disabled={focusedRouteParams?.id === 1} onPress={() => navigation.push('Chat', {id: 1})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
         </View>
         <Text style={chatTitleStyle}>Chat One</Text>
       </Pressable>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 2})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} disabled={focusedRouteParams?.id === 2} onPress={() => navigation.push('Chat', {id: 2})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
         </View>
         <Text style={chatTitleStyle}>Chat Two</Text>
       </Pressable>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 3})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} disabled={focusedRouteParams?.id === 3} onPress={() => navigation.push('Chat', {id: 3})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
         </View>
@@ -272,7 +281,7 @@ export default class App extends React.Component {
   regenerateNavigationState() {
       const currentState = navigationRef.getRootState()
       const strippedState = stripNavigationState(currentState) 
-      addChatRouteIfNecessary(strippedState)
+      fixState(strippedState)
       navigationRef.reset(strippedState)
   }
   
