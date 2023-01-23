@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import { find } from 'underscore';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef, useNavigationState} from '@react-navigation/native';
+import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef, useNavigationState, stripKeysFromNavigationState } from '@react-navigation/native';
 import {Text, View, Image, Pressable,  BackHandler, Dimensions, Platform}  from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
@@ -11,19 +11,6 @@ import * as Linking from 'expo-linking';
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
 const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
 const titleStyle = {fontSize: 24, fontWeight: 'bold', flex: 1};
-
-const keysBlocklist = ['key', 'stale', 'routeNames']
-
-const stripNavigationState = (state) => {
-  const rawState = Array.isArray(state) ? [] : {};
-  for (const key of Object.keys(state)) {
-    if (keysBlocklist.includes(key)) {
-      continue
-    }
-    rawState[key] = typeof state[key] === 'object' ? stripNavigationState(state[key]) : state[key]
-  }
-  return rawState 
-}
 
 const config = {
   initialRouteName: 'LeftHandNav',
@@ -279,10 +266,12 @@ export default class App extends React.Component {
   }
   
   regenerateNavigationState() {
-      const currentState = navigationRef.getRootState()
-      const strippedState = stripNavigationState(currentState) 
-      fixState(strippedState)
-      navigationRef.reset(strippedState)
+    const currentState = navigationRef.getRootState()
+    // Modify navigation state so react-navigation will regenerate it with new keys.
+    // See patches/@react-navigation+native+6.0.13.patch
+    const strippedState = stripKeysFromNavigationState(currentState) 
+    fixState(strippedState)
+    navigationRef.reset(strippedState)
   }
   
   handleResize(e) {
