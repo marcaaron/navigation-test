@@ -102,12 +102,21 @@ function LeftHandNav({navigation}) {
   );
 }
 
+const navigationUp = (navigation, screenName) => {
+  const state = navigation.getState()
+  if (state.index > 0 && state.routes[state.index - 1].name === screenName) {
+    navigation.pop()
+  } else {
+    navigation.replace(screenName)
+  }
+}
+
 function AboutScreen({navigation}) {
   return (
     <WithCustomBackBehavior navigation={navigation}>
       <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Pressable onPress={() => navigation.replace('Settings')}>
+          <Pressable onPress={() => navigationUp(navigation, 'Settings')}>
             <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
           </Pressable>
           <Text style={titleStyle}>About</Text>
@@ -181,7 +190,7 @@ function SettingsScreen({navigation}) {
         </Pressable>
         <Text style={titleStyle}>Settings</Text>
       </View>
-      <Pressable style={{flexDirection: 'row', marginTop: 10}} onPress={() => navigation.replace('About')}>
+      <Pressable style={{flexDirection: 'row', marginTop: 10}} onPress={() => navigation.push('About')}>
         <Text style={{fontSize: 24, flex: 1, paddingLeft: 20}}>About</Text>
         <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron-right.png'}} />
       </Pressable>
