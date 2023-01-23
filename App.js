@@ -54,22 +54,6 @@ const linking = {
 
 const checkIsSmallScreen = (width) => width <= 800;
 
-/**
- * By default the back handler will pop. We want it to go "back" instead of "up". All screens that are inside a nested navigator
- * except the root screen of that nested navigator will need to implement this.
- */
-function WithCustomBackBehavior(props) {
-  useFocusEffect(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      // props.navigation.popToTop();
-    });
-
-    return () => subscription.remove();
-  });
-
-  return props.children;
-}
-
 const useFocusedRouteParams = (navigation) => {
   const state = useNavigationState(state => state)
   return state.routes?.[state.index]?.params
@@ -113,27 +97,25 @@ const navigationUp = (navigation, screenName) => {
 
 function AboutScreen({navigation}) {
   return (
-    <WithCustomBackBehavior navigation={navigation}>
-      <View style={{margin: 10}}>
-        <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Pressable onPress={() => navigationUp(navigation, 'Settings')}>
-            <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
-          </Pressable>
-          <Text style={titleStyle}>About</Text>
-        </View>
-        <Text style={{fontSize: 20, marginBottom: 20}}>Welcome to my test app</Text>
-        <Pressable
-            onPress={() => navigation.push('Chat', {id: 1})}
-          >
-            <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
+    <View style={{margin: 10}}>
+      <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
+        <Pressable onPress={() => navigationUp(navigation, 'Settings')}>
+          <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
         </Pressable>
-        <Pressable
-            onPress={() => navigation.push('Search')}
-          >
-            <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to Search page</Text>
-        </Pressable>
+        <Text style={titleStyle}>About</Text>
       </View>
-    </WithCustomBackBehavior>
+      <Text style={{fontSize: 20, marginBottom: 20}}>Welcome to my test app</Text>
+      <Pressable
+          onPress={() => navigation.push('Chat', {id: 1})}
+        >
+          <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
+      </Pressable>
+      <Pressable
+          onPress={() => navigation.push('Search')}
+        >
+          <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to Search page</Text>
+      </Pressable>
+    </View>
   );
 }
 
