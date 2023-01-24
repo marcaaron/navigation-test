@@ -1,8 +1,8 @@
 import 'react-native-gesture-handler';
-import { find } from 'underscore';
+import _ from 'underscore';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme,  getStateFromPath, useFocusEffect,  createNavigationContainerRef, useNavigationState, stripKeysFromNavigationState } from '@react-navigation/native';
-import {Text, View, Image, Pressable,  BackHandler, Dimensions, Platform}  from 'react-native';
+import {NavigationContainer, DefaultTheme,  getStateFromPath, createNavigationContainerRef, useNavigationState, stripKeysFromNavigationState } from '@react-navigation/native';
+import {Text, View, Image, Pressable, Dimensions, Platform}  from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import createWebNavigator from './createWebNavigator';
@@ -37,7 +37,7 @@ const fixState = (state) => {
     if (checkIsSmallScreen(Dimensions.get('window').width)) {
       return 
     }
-    if (!find(state.routes, r => r.name === 'Chat')) {
+    if (!_.find(state.routes, r => r.name === 'Chat')) {
       state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
     }
 }
