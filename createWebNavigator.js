@@ -16,11 +16,7 @@ function CustomStackNavigator(props) {
     });
 
   const lastChatIndex = _.findLastIndex(state.routes, { name: "Chat" });
-  const lastRHPIndex = _.findLastIndex(
-    state.routes,
-    (route) => route.name !== "Chat" && route.name !== "LeftHandNav"
-  );
-  const isRHPOnTopOfStack = lastRHPIndex === state.index;
+
   return (
     <NavigationContent>
       <View style={{ flexDirection: "row", flex: 1 }}>
@@ -36,35 +32,18 @@ function CustomStackNavigator(props) {
             );
           }
 
-          // Only show the top-most chat and hide any others
-          if (route.name === "Chat" && i !== lastChatIndex) {
-            return null;
-          }
-
           if (route.name === "Chat") {
             return (
-              <View key={route.key} style={{ flex: 1 }}>
+              <View key={route.key} style={{ flex: 1, display: lastChatIndex === i ? 'flex' : 'none' }}>
                 {descriptors[route.key].render()}
               </View>
             );
           }
 
-          if (
-            route.name !== "Chat" &&
-            route.name !== "LeftHandNav" &&
-            i !== lastRHPIndex
-          ) {
-            return null;
-          }
-
-          if (!isRHPOnTopOfStack) {
-            return null;
-          }
-
           return (
             <View
               key={route.key}
-              style={{ width: "100%", height: "100%", position: "absolute" }}
+              style={{ width: "100%", height: "100%", position: "absolute", display: state.index === i ? 'flex' : 'none'}}
             >
               <View
                 style={{ flexDirection: "row", width: "100%", height: "100%" }}
@@ -82,7 +61,7 @@ function CustomStackNavigator(props) {
                     }}
                   />
                 </Pressable>
-                <View style={{ width: 375 }}>
+                <View style={{ width: 375, backgroundColor: 'white' }}>
                   {descriptors[route.key].render()}
                 </View>
               </View>
