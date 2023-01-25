@@ -23,7 +23,7 @@ index 0000000..31ba628
 +// stale - with stale: false navigation won't regenerate the state 
 +// routeNames - to be sure that we have updated routeNames if something changed 
 +
-+// The argument for this function may be: NavigationState, NavigatoinRoute, PartialState<NavigationState>
++// The argument for this function may be: NavigationState, NavigationRoute, PartialState<NavigationState>
 +const stripKeysFromNavigationState = ({key, stale, routeNames, routes, state, ...rest}) => {
 +  return {
 +    ...rest, 
