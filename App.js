@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import _ from 'underscore';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme,  getStateFromPath, createNavigationContainerRef, useNavigationState, stripKeysFromNavigationState } from '@react-navigation/native';
+import {NavigationContainer, DefaultTheme,  getStateFromPath, createNavigationContainerRef, useNavigationState } from '@react-navigation/native';
 import {Text, View, Image, Pressable, Dimensions, Platform}  from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
@@ -13,32 +13,44 @@ const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
 const titleStyle = {fontSize: 24, fontWeight: 'bold', flex: 1};
 
 const config = {
-  initialRouteName: 'LeftHandNav',
   screens: {
-    Chat: { 
-      path: 'r/:id?', 
-      parse: { id: (id) => parseInt(id) } 
-    },
-    LeftHandNav: '',
-    SettingsStack: {
-      path: 'settings',
+    root: {
+      initialRouteName: 'LeftHandNav',
       screens: {
-        Settings: '',
-        About: 'about',
+        Chat: { 
+          path: 'r/:id?', 
+          parse: { id: (id) => parseInt(id) } 
+        },
+        LeftHandNav: '',
+        SettingsStack: {
+          path: 'settings',
+          screens: {
+            Settings: '',
+            About: 'about',
+          },
+        },
+        Search: 'search'
       },
-    },
-    Search: 'search'
-  },
+    }
+  }
 };
 
+const stripKeysFromNavigationState = ({key, stale, routeNames, routes, state, ...rest}) => {
+  return {
+    ...rest, 
+    routes: routes && routes.map(stripKeysFromNavigationState),
+    state: state && stripKeysFromNavigationState(state)
+  }
+}
 
+// TODO: make this function work better or find another way!
 const fixState = (state) => {
     // we don't want to add Chat route for small screens
     if (checkIsSmallScreen(Dimensions.get('window').width)) {
       return 
     }
-    if (!_.find(state.routes, r => r.name === 'Chat')) {
-      state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
+    if (!_.find(state.routes[0].state, r => r.name === 'Chat')) {
+      state.routes[0].state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
     }
 }
 
@@ -54,13 +66,13 @@ const linking = {
 
 const checkIsSmallScreen = (width) => width <= 800;
 
-const useFocusedRouteParams = (navigation) => {
+const useFocusedRouteParams = () => {
   const state = useNavigationState(state => state)
   return state.routes?.[state.index]?.params
 }
 
 function LeftHandNav({navigation}) {
-  const focusedRouteParams = useFocusedRouteParams(navigation);
+  const focusedRouteParams = useFocusedRouteParams();
   return (
     <View style={{flex: 1}}>
       <LHNHeader navigation={navigation} />
@@ -181,11 +193,11 @@ function SettingsScreen({navigation}) {
 }
 
 function ChatScreen({route, navigation}) {
-  const navigatorName = React.useContext(NavigatorNameContext);
+  const isSmallScreen = React.useContext(IsSmallScreenContext);
   return (
     <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-start'}}>
-          {navigatorName === NavigatorName.NATIVE_STACK_NAVIGATOR && (
+          {isSmallScreen && (
               <Pressable onPress={() => {
                 if (navigation.canGoBack()) {
                   navigation.goBack();
@@ -218,16 +230,8 @@ function ChatScreen({route, navigation}) {
 
 const navigationRef = createNavigationContainerRef()
 
-const WebStack = createWebNavigator();
-const NativeStack = createNativeStackNavigator();
-const SettingsStack = createNativeStackNavigator();
-
-const NavigatorName = {
-  CUSTOM_STACK_NAVIGATOR: 'CustomStackNavigator',
-  NATIVE_STACK_NAVIGATOR: 'NativeStackNavigator',
-}
-
-const SettingsStackNavigator = () => (
+const SettingsStackNavigator = ({ navigation }) => {
+  return (
   <SettingsStack.Navigator
   >
     <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{
@@ -236,7 +240,7 @@ const SettingsStackNavigator = () => (
       }} />
     <SettingsStack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
   </SettingsStack.Navigator>
-);
+)};
 
 const navTheme = {
   ...DefaultTheme,
@@ -245,36 +249,72 @@ const navTheme = {
   },
 };
 
-const NavigatorNameContext = React.createContext();
+const IsSmallScreenContext = React.createContext();
+
+const createMainStack = (Stack) => () => {
+  return (
+    <Stack.Navigator
+      initialRouteName="LeftHandNav"
+    >
+        <Stack.Screen
+          name="LeftHandNav"
+          component={LeftHandNav}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={ChatScreen}
+          options={{headerShown: false}}
+          initialParams={{ id: 1 }} />
+        <Stack.Group>
+          <Stack.Screen
+            name="Search"
+            component={SearchScreen}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="SettingsStack"
+            component={SettingsStackNavigator}
+            options={{headerShown: false}}
+          />
+        </Stack.Group>
+    </Stack.Navigator>
+  )
+}
+
+const WebStack = createWebNavigator();
+const NativeStack = createNativeStackNavigator();
+
+const SettingsStack = createNativeStackNavigator();
+
+const WebNavigator = createMainStack(WebStack);
+const NativeNavigator= createMainStack(NativeStack);
+
+const RootStack = createNativeStackNavigator();
  
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      Stack: checkIsSmallScreen(Dimensions.get('window').width) ? NativeStack : WebStack,
+      isSmallScreen: checkIsSmallScreen(Dimensions.get('window').width),
       initialState: null,
     }
   }
   
   regenerateNavigationState() {
-    const currentState = navigationRef.getRootState()
+    const { routes, ...rest } = navigationRef.getRootState()
     // Modify navigation state so react-navigation will regenerate it with new keys.
     // See patches/@react-navigation+native+6.0.13.patch
-    const strippedState = stripKeysFromNavigationState(currentState) 
-    fixState(strippedState)
-    navigationRef.reset(strippedState)
+    // const strippedState = stripKeysFromNavigationState({routes, ...rest}) 
+    const strippedState = {routes: routes.map(stripKeysFromNavigationState), ...rest}
+    navigationRef.resetRoot(strippedState)
   }
   
   handleResize(e) {
-    const isSmallScreenWidth = checkIsSmallScreen(e.window.width);
-    const navigatorName = this.state.Stack.Navigator.name;
-
-    if (isSmallScreenWidth && navigatorName === NavigatorName.CUSTOM_STACK_NAVIGATOR) {
+    const isSmallScreen = checkIsSmallScreen(e.window.width);
+    if (isSmallScreen !== this.state.isSmallScreen) {
       this.regenerateNavigationState()
-      this.setState({...this.state, Stack: NativeStack})        
-    } else if (!isSmallScreenWidth && this.state.Stack.Navigator.name === NavigatorName.NATIVE_STACK_NAVIGATOR) {
-      this.regenerateNavigationState()
-      this.setState({...this.state, Stack: WebStack})        
+      this.setState({...this.state, isSmallScreen})        
     }
   }
   
@@ -283,7 +323,7 @@ export default class App extends React.Component {
     if (Platform.OS !== 'web' && url !== null) {
       return;
     }
-    this.setState({...this.state, initialState: linking.getStateFromPath('', config)})
+    this.setState({...this.state, initialState: getStateFromPath('', config)})
   }
 
   componentDidMount() {
@@ -294,10 +334,8 @@ export default class App extends React.Component {
   }
 
   render() {
-    const Stack = this.state.Stack;
-
     return (
-      <NavigatorNameContext.Provider value={this.state.Stack.Navigator.name}>
+      <IsSmallScreenContext.Provider value={this.state.isSmall}>
         <View style={{
           flex: 1,
           justifyContent: 'center',
@@ -314,35 +352,20 @@ export default class App extends React.Component {
             }}
             initialState={this.state.initialState}
           >
-            <Stack.Navigator
-              initialRouteName="LeftHandNav"
-            >
-                <Stack.Screen
-                  name="LeftHandNav"
-                  component={LeftHandNav}
-                  options={{headerShown: false}}
-                />
-                <Stack.Screen
-                  name="Chat"
-                  component={ChatScreen}
-                  options={{headerShown: false}}
-                  initialParams={{ id: 1 }} />
-                <Stack.Group>
-                  <Stack.Screen
-                    name="Search"
-                    component={SearchScreen}
-                    options={{headerShown: false}}
-                  />
-                  <Stack.Screen
-                    name="SettingsStack"
-                    component={SettingsStackNavigator}
-                    options={{headerShown: false}}
-                  />
-                </Stack.Group>
-            </Stack.Navigator>
+            <RootStack.Navigator screenOptions={{headerShown: false}}>
+            {!this.state.isSmallScreen ? (
+              <RootStack.Screen 
+                name='root'
+                component={WebNavigator} />
+            ) : (
+              <RootStack.Screen 
+                name='root'
+                component={NativeNavigator} />
+            )}
+            </RootStack.Navigator>
           </NavigationContainer>
         </View>
-      </NavigatorNameContext.Provider>
+      </IsSmallScreenContext.Provider>
     );
   }
 }
