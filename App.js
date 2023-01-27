@@ -336,7 +336,7 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <IsSmallScreenContext.Provider value={this.state.isSmall}>
+      <IsSmallScreenContext.Provider value={this.state.isSmallScreen}>
         <View style={{
           flex: 1,
           justifyContent: 'center',
