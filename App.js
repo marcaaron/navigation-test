@@ -49,7 +49,7 @@ const fixState = (state) => {
     if (checkIsSmallScreen(Dimensions.get('window').width)) {
       return 
     }
-    if (!_.find(state.routes[0].state, r => r.name === 'Chat')) {
+    if (!_.find(state.routes[0].state.routes, r => r.name === 'Chat')) {
       state.routes[0].state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
     }
 }
@@ -307,6 +307,7 @@ export default class App extends React.Component {
     // See patches/@react-navigation+native+6.0.13.patch
     // const strippedState = stripKeysFromNavigationState({routes, ...rest}) 
     const strippedState = {routes: routes.map(stripKeysFromNavigationState), ...rest}
+    fixState(strippedState)
     navigationRef.resetRoot(strippedState)
   }
   
