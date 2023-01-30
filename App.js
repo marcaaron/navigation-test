@@ -13,26 +13,22 @@ const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
 const titleStyle = {fontSize: 24, fontWeight: 'bold', flex: 1};
 
 const config = {
+  initialRouteName: 'LeftHandNav',
   screens: {
-    root: {
-      initialRouteName: 'LeftHandNav',
+    Chat: { 
+      path: 'r/:id?', 
+      parse: { id: (id) => parseInt(id) } 
+    },
+    LeftHandNav: '',
+    SettingsStack: {
+      path: 'settings',
       screens: {
-        Chat: { 
-          path: 'r/:id?', 
-          parse: { id: (id) => parseInt(id) } 
-        },
-        LeftHandNav: '',
-        SettingsStack: {
-          path: 'settings',
-          screens: {
-            Settings: '',
-            About: 'about',
-          },
-        },
-        Search: 'search'
+        Settings: '',
+        About: 'about',
       },
-    }
-  }
+    },
+    Search: 'search'
+  },
 };
 
 const stripKeysFromNavigationState = ({key, stale, routeNames, routes, state, ...rest}) => {
@@ -49,9 +45,10 @@ const fixState = (state) => {
     if (checkIsSmallScreen(Dimensions.get('window').width)) {
       return 
     }
-    if (!_.find(state.routes[0].state.routes, r => r.name === 'Chat')) {
-      state.routes[0].state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
+    if (!_.find(state.routes, r => r.name === 'Chat')) {
+      state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
     }
+    return state;
 }
 
 const linking = {
@@ -290,32 +287,19 @@ const SettingsStack = createNativeStackNavigator();
 const WebNavigator = createMainStack(WebStack);
 const NativeNavigator= createMainStack(NativeStack);
 
-const RootStack = createNativeStackNavigator();
- 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       isSmallScreen: checkIsSmallScreen(Dimensions.get('window').width),
-      initialState: null,
+      navigationState: null,
     }
-  }
-  
-  regenerateNavigationState() {
-    const { routes, ...rest } = navigationRef.getRootState()
-    // Modify navigation state so react-navigation will regenerate it with new keys.
-    // See patches/@react-navigation+native+6.0.13.patch
-    // const strippedState = stripKeysFromNavigationState({routes, ...rest}) 
-    const strippedState = {routes: routes.map(stripKeysFromNavigationState), ...rest}
-    fixState(strippedState)
-    navigationRef.resetRoot(strippedState)
   }
   
   handleResize(e) {
     const isSmallScreen = checkIsSmallScreen(e.window.width);
     if (isSmallScreen !== this.state.isSmallScreen) {
-      this.regenerateNavigationState()
-      this.setState({...this.state, isSmallScreen})        
+      this.setState({isSmallScreen})        
     }
   }
   
@@ -324,14 +308,23 @@ export default class App extends React.Component {
     if (Platform.OS !== 'web' && url !== null) {
       return;
     }
-    this.setState({...this.state, initialState: getStateFromPath('', config)})
+    this.setState({navigationState: getStateFromPath('', config)})
   }
 
   componentDidMount() {
     this.handleResize = this.handleResize.bind(this);
     this.handleInitialState = this.handleInitialState.bind(this);
+    this.getInitialState= this.getInitialState.bind(this);
     Dimensions.addEventListener('change', this.handleResize)
     Linking.getInitialURL().then(this.handleInitialState)
+  }
+  
+  getInitialState() {
+    if (this.state.navigationState) {
+      return fixState(this.state.navigationState)
+    }
+    return this.state.navigationState
+
   }
 
   render() {
@@ -348,22 +341,18 @@ export default class App extends React.Component {
             ref={navigationRef}
             linking={linking}
             theme={navTheme}
+            key={this.state.isSmallScreen ? 'native' : 'web'}
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
+              this.setState({navigationState: state})
             }}
-            initialState={this.state.initialState}
+            initialState={this.getInitialState()}
           >
-            <RootStack.Navigator screenOptions={{headerShown: false}}>
             {!this.state.isSmallScreen ? (
-              <RootStack.Screen 
-                name='root'
-                component={WebNavigator} />
+              WebNavigator()
             ) : (
-              <RootStack.Screen 
-                name='root'
-                component={NativeNavigator} />
+              NativeNavigator()
             )}
-            </RootStack.Navigator>
           </NavigationContainer>
         </View>
       </IsSmallScreenContext.Provider>
