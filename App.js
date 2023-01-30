@@ -98,7 +98,7 @@ function LeftHandNav({navigation}) {
   );
 }
 
-const navigationUp = (navigation, screenName) => {
+const navigateUp = (navigation, screenName) => {
   const state = navigation.getState()
   if (state.index > 0 && state.routes[state.index - 1].name === screenName) {
     navigation.pop()
@@ -111,7 +111,7 @@ function AboutScreen({navigation}) {
   return (
     <View style={{margin: 10}}>
       <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-        <Pressable onPress={() => navigationUp(navigation, 'Settings')}>
+        <Pressable onPress={() => navigateUp(navigation, 'Settings')}>
           <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
         </Pressable>
         <Text style={titleStyle}>About</Text>
@@ -199,13 +199,8 @@ function ChatScreen({route, navigation}) {
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-start'}}>
           {isSmallScreen && (
               <Pressable onPress={() => {
-                if (navigation.canGoBack()) {
-                  navigation.goBack();
-                  return;
-                }
-
-                console.error('On the chat screen but nowhere to go back to. We should always at least have the LHN to go back to');
-            }}>
+                navigateUp(navigation, 'LeftHandNav')
+              }}>
               <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
             </Pressable>
           )}
@@ -304,7 +299,6 @@ export default class App extends React.Component {
   regenerateNavigationState() {
     const { routes, ...rest } = navigationRef.getRootState()
     // Modify navigation state so react-navigation will regenerate it with new keys.
-    // See patches/@react-navigation+native+6.0.13.patch
     // const strippedState = stripKeysFromNavigationState({routes, ...rest}) 
     const strippedState = {routes: routes.map(stripKeysFromNavigationState), ...rest}
     fixState(strippedState)
