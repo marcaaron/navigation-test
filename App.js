@@ -95,7 +95,7 @@ function LeftHandNav({navigation}) {
   );
 }
 
-const navigationUp = (navigation, screenName) => {
+const navigateUp = (navigation, screenName) => {
   const state = navigation.getState()
   if (state.index > 0 && state.routes[state.index - 1].name === screenName) {
     navigation.pop()
@@ -108,7 +108,7 @@ function AboutScreen({navigation}) {
   return (
     <View style={{margin: 10}}>
       <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-        <Pressable onPress={() => navigationUp(navigation, 'Settings')}>
+        <Pressable onPress={() => navigateUp(navigation, 'Settings')}>
           <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
         </Pressable>
         <Text style={titleStyle}>About</Text>
