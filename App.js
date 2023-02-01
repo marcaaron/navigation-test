@@ -349,9 +349,9 @@ export default class App extends React.Component {
             initialState={this.getInitialState()}
           >
             {!this.state.isSmallScreen ? (
-              WebNavigator()
+              <WebNavigator />
             ) : (
-              NativeNavigator()
+              <NativeNavigator />
             )}
           </NavigationContainer>
         </View>
