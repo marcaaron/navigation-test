@@ -3,10 +3,13 @@ import _ from 'underscore';
 import * as React from 'react';
 import {NavigationContainer, DefaultTheme,  getStateFromPath, createNavigationContainerRef, useNavigationState } from '@react-navigation/native';
 import {Text, View, Image, Pressable, Dimensions, Platform}  from 'react-native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import Constants from 'expo-constants';
 import createWebNavigator from './createWebNavigator';
 import * as Linking from 'expo-linking';
+import * as ScreenOrientation from 'expo-screen-orientation';
+
 
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
 const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
@@ -20,16 +23,23 @@ const config = {
       parse: { id: (id) => parseInt(id) } 
     },
     LeftHandNav: '',
-    SettingsStack: {
-      path: 'settings',
+    RightHandStack: {
       screens: {
-        Settings: '',
-        About: 'about',
-      },
-    },
-    Search: 'search'
+        SettingsStack: {
+          path: 'settings',
+          screens: {
+            Settings: '',
+            About: 'about',
+          },
+        },
+        Search: 'search'
+      }
+    }
   },
 };
+
+// NativeStackNavigator doesn't have animations on web
+const createPlatformSpecificStackNavigator = () => Platform.OS == 'web' ? createStackNavigator() : createNativeStackNavigator()
 
 const stripKeysFromNavigationState = ({key, stale, routeNames, routes, state, ...rest}) => {
   return {
@@ -62,6 +72,7 @@ const linking = {
 };
 
 const checkIsSmallScreen = (width) => width <= 800;
+const checkIsPortrait = (screenOrientation) => screenOrientation == 1;
 
 const useFocusedRouteParams = () => {
   const state = useNavigationState(state => state)
@@ -133,10 +144,10 @@ function LHNHeader({navigation}) {
     <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
       <Text style={{fontSize: 24, fontWeight: 'bold', marginLeft: 10}}>Chats</Text>
       <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginRight: 10, marginTop: 10}}>
-        <Pressable style={{marginRight: 20}} onPress={() => navigation.push('Search')}>
+        <Pressable style={{marginRight: 20}} onPress={() => navigation.push('RightHandStack', { screen: 'Search' })}>
           <Image style={{width: 30, height: 30}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/search.png'}} />
         </Pressable>
-        <Pressable onPress={() => navigation.push('SettingsStack')}>
+        <Pressable onPress={() => navigation.push('RightHandStack', { screen :'SettingsStack' })}>
           <View style={{borderRadius: 22.5, overflow: 'hidden'}}>
             <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
           </View>
@@ -217,7 +228,7 @@ function ChatScreen({route, navigation}) {
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
         </Pressable>
         <Pressable
-          onPress={() => navigation.push('SettingsStack', { screen: 'About' })}
+          onPress={() => navigation.push('RightHandStack', { screen: 'SettingsStack', params: {screen: 'About'} })}
         >
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to About</Text>
         </Pressable>
@@ -230,13 +241,35 @@ const navigationRef = createNavigationContainerRef()
 const SettingsStackNavigator = ({ navigation }) => {
   return (
   <SettingsStack.Navigator
+    screenOptions={{
+      animationEnabled: true,
+      headerShown: false,
+    }}
   >
     <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{
-      headerShown: false,
-      animationTypeForReplace: 'pop'
+      animationTypeForReplace: 'pop',
       }} />
-    <SettingsStack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
+    <SettingsStack.Screen name="About" component={AboutScreen} />
   </SettingsStack.Navigator>
+)};
+
+const RightHandStackNavigator = ({ navigation }) => {
+  return (
+    <RightHandStack.Navigator
+      screenOptions={{
+        animationEnabled: true,
+        headerShown: false,
+      }}
+    >
+      <RightHandStack.Screen
+        name="Search"
+        component={SearchScreen}
+      />
+      <RightHandStack.Screen
+        name="SettingsStack"
+        component={SettingsStackNavigator}
+      />
+    </RightHandStack.Navigator>
 )};
 
 const navTheme = {
@@ -252,29 +285,20 @@ const createMainStack = (Stack) => () => {
   return (
     <Stack.Navigator
       initialRouteName="LeftHandNav"
+      screenOptions={{headerShown: false}}
     >
         <Stack.Screen
           name="LeftHandNav"
           component={LeftHandNav}
-          options={{headerShown: false}}
         />
         <Stack.Screen
           name="Chat"
           component={ChatScreen}
-          options={{headerShown: false}}
           initialParams={{ id: 1 }} />
-        <Stack.Group>
-          <Stack.Screen
-            name="Search"
-            component={SearchScreen}
-            options={{headerShown: false}}
-          />
-          <Stack.Screen
-            name="SettingsStack"
-            component={SettingsStackNavigator}
-            options={{headerShown: false}}
-          />
-        </Stack.Group>
+        <Stack.Screen
+          name="RightHandStack"
+          component={RightHandStackNavigator}
+        />
     </Stack.Navigator>
   )
 }
@@ -282,7 +306,8 @@ const createMainStack = (Stack) => () => {
 const WebStack = createWebNavigator();
 const NativeStack = createNativeStackNavigator();
 
-const SettingsStack = createNativeStackNavigator();
+const RightHandStack = createPlatformSpecificStackNavigator();
+const SettingsStack = createPlatformSpecificStackNavigator();
 
 const WebNavigator = createMainStack(WebStack);
 const NativeNavigator= createMainStack(NativeStack);
@@ -293,6 +318,7 @@ export default class App extends React.Component {
     this.state = {
       isSmallScreen: checkIsSmallScreen(Dimensions.get('window').width),
       navigationState: null,
+      isPortrait: null,
     }
   }
   
@@ -300,6 +326,14 @@ export default class App extends React.Component {
     const isSmallScreen = checkIsSmallScreen(e.window.width);
     if (isSmallScreen !== this.state.isSmallScreen) {
       this.setState({isSmallScreen})        
+    }
+  }
+
+  handleRotate(e) {
+    const isPortrait = checkIsPortrait(e.orientationInfo.orientation)
+    console.log(isPortrait, e)
+    if (isPortrait !== this.state.isPortrait) {
+      this.setState({isPortrait})        
     }
   }
   
@@ -313,9 +347,12 @@ export default class App extends React.Component {
 
   componentDidMount() {
     this.handleResize = this.handleResize.bind(this);
+    this.handleRotate= this.handleRotate.bind(this);
     this.handleInitialState = this.handleInitialState.bind(this);
     this.getInitialState= this.getInitialState.bind(this);
     Dimensions.addEventListener('change', this.handleResize)
+    ScreenOrientation.addOrientationChangeListener(this.handleRotate)
+    ScreenOrientation.getOrientationAsync().then((e) => {this.setState({isPortrait: checkIsPortrait(e)})})
     Linking.getInitialURL().then(this.handleInitialState)
   }
   
@@ -324,12 +361,12 @@ export default class App extends React.Component {
       return fixState(this.state.navigationState)
     }
     return this.state.navigationState
-
   }
 
   render() {
+    const isNarrowLayout = Platform.OS == 'web' ? this.state.isSmallScreen : this.state.isPortrait;
     return (
-      <IsSmallScreenContext.Provider value={this.state.isSmallScreen}>
+      <IsSmallScreenContext.Provider value={isNarrowLayout}>
         <View style={{
           flex: 1,
           justifyContent: 'center',
@@ -341,17 +378,17 @@ export default class App extends React.Component {
             ref={navigationRef}
             linking={linking}
             theme={navTheme}
-            key={this.state.isSmallScreen ? 'native' : 'web'}
+            key={isNarrowLayout ? 'native' : 'web'}
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
               this.setState({navigationState: state})
             }}
             initialState={this.getInitialState()}
           >
-            {!this.state.isSmallScreen ? (
-              <WebNavigator />
-            ) : (
+            {isNarrowLayout ? (
               <NativeNavigator />
+            ) : (
+              <WebNavigator />
             )}
           </NavigationContainer>
         </View>
