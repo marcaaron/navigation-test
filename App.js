@@ -41,14 +41,6 @@ const config = {
 // NativeStackNavigator doesn't have animations on web
 const createPlatformSpecificStackNavigator = () => Platform.OS == 'web' ? createStackNavigator() : createNativeStackNavigator()
 
-const stripKeysFromNavigationState = ({key, stale, routeNames, routes, state, ...rest}) => {
-  return {
-    ...rest, 
-    routes: routes && routes.map(stripKeysFromNavigationState),
-    state: state && stripKeysFromNavigationState(state)
-  }
-}
-
 // TODO: make this function work better or find another way!
 const fixState = (state) => {
     // we don't want to add Chat route for small screens
