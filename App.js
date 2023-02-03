@@ -300,7 +300,7 @@ const createMainStack = (Stack) => () => {
   return (
     <Stack.Navigator
       initialRouteName="LeftHandNav"
-      screenOptions={{headerShown: false}}
+      screenOptions={{headerShown: false, ...getPlatformSpecificScreenAnimations()}}
     >
         <Stack.Screen
           name="LeftHandNav"
