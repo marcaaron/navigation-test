@@ -4,8 +4,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "postinstall": "patch-package"
+    "web": "expo start --web"
   },
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",
@@ -29,8 +28,7 @@
     "expo-screen-orientation": "~4.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "patch-package": "^6.5.0"
+    "@babel/core": "^7.12.9"
   },
   "private": true
 }
