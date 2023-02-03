@@ -118,6 +118,10 @@ function LeftHandNav({navigation}) {
   );
 }
 
+// This function checks if the target route is one pop() away.
+// If yes - then call pop()
+// If not - it is going to replace() with given targer. 
+// You can think about this as a variation of "navigation.navigate"
 const navigateUp = (navigation, screenName) => {
   const state = navigation.getState()
   if (state.index > 0 && state.routes[state.index - 1].name === screenName) {
