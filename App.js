@@ -352,7 +352,7 @@ export default class App extends React.Component {
   }
   
   handleInitialState(url) {
-    // we don't want to set initialState for web or if application is opened using deeplinks
+    // we don't want to set initialState for mobile or if application is opened using deeplinks
     if (Platform.OS !== 'web' && url !== null) {
       return;
     }
