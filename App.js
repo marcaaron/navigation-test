@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 import createWebNavigator from './createWebNavigator';
 import * as Linking from 'expo-linking';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { CardStyleInterpolators } from '@react-navigation/stack';
 
 
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
@@ -40,6 +41,25 @@ const config = {
 
 // NativeStackNavigator doesn't have animations on web
 const createPlatformSpecificStackNavigator = () => Platform.OS == 'web' ? createStackNavigator() : createNativeStackNavigator()
+
+const getPlatformSpecificScreenAnimations = () => {
+  if (Platform.OS === "web") {
+    return {
+      // iOS like animations 
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+      // by default this value is false on web
+      animationEnabled: true,
+    };
+  } else if (Platform.OS === "android") {
+    return {
+      // We have less possibilities on NativeStack but slide_from_right work fine
+      animation: 'slide_from_right'
+    };
+  }
+  // Animations for iOS are good enought by default 
+  return {};
+};
+
 
 // TODO: make this function work better or find another way!
 const fixState = (state) => {
@@ -234,13 +254,16 @@ const SettingsStackNavigator = ({ navigation }) => {
   return (
   <SettingsStack.Navigator
     screenOptions={{
-      animationEnabled: true,
       headerShown: false,
+      ...getPlatformSpecificScreenAnimations()
     }}
   >
-    <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{
-      animationTypeForReplace: 'pop',
-      }} />
+    <SettingsStack.Screen 
+      name="Settings" 
+      component={SettingsScreen} 
+      options={{
+        animationTypeForReplace: 'pop',
+    }} />
     <SettingsStack.Screen name="About" component={AboutScreen} />
   </SettingsStack.Navigator>
 )};
@@ -249,7 +272,7 @@ const RightHandStackNavigator = ({ navigation }) => {
   return (
     <RightHandStack.Navigator
       screenOptions={{
-        animationEnabled: true,
+        ...getPlatformSpecificScreenAnimations(),
         headerShown: false,
       }}
     >
