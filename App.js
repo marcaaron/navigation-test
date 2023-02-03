@@ -65,7 +65,7 @@ const getPlatformSpecificScreenAnimations = () => {
 const fixState = (state) => {
     // we don't want to add Chat route for small screens
     if (checkIsSmallScreen(Dimensions.get('window').width)) {
-      return 
+      return state 
     }
     if (!_.find(state.routes, r => r.name === 'Chat')) {
       state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
@@ -346,7 +346,6 @@ export default class App extends React.Component {
 
   handleRotate(e) {
     const isPortrait = checkIsPortrait(e.orientationInfo.orientation)
-    console.log(isPortrait, e)
     if (isPortrait !== this.state.isPortrait) {
       this.setState({isPortrait})        
     }
