@@ -60,17 +60,11 @@ const getPlatformSpecificScreenAnimations = () => {
   return {};
 };
 
-
-// TODO: make this function work better or find another way!
-const fixState = (state) => {
-    // we don't want to add Chat route for small screens
-    if (checkIsSmallScreen(Dimensions.get('window').width)) {
-      return state 
-    }
-    if (!_.find(state.routes, r => r.name === 'Chat')) {
-      state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
-    }
-    return state;
+const ensureChatRouteOnStack = (state) => {
+  if (!_.find(state.routes, r => r.name === 'Chat')) {
+    state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
+  }
+  return state;
 }
 
 const linking = {
@@ -78,7 +72,9 @@ const linking = {
   config,
   getStateFromPath(path, cfg) {
     const state = getStateFromPath(path, cfg);
-    fixState(state)
+    if (!checkIsSmallScreen(Dimensions.get('window').width)) {
+      ensureChatRouteOnStack(state)
+    }
     return state;
   }
 };
@@ -252,8 +248,6 @@ function ChatScreen({route, navigation}) {
   );
 }
 
-const navigationRef = createNavigationContainerRef()
-
 const SettingsStackNavigator = ({ navigation }) => {
   return (
   <SettingsStack.Navigator
@@ -300,36 +294,11 @@ const navTheme = {
 
 const IsSmallScreenContext = React.createContext();
 
-const createMainStack = (Stack) => () => {
-  return (
-    <Stack.Navigator
-      initialRouteName="LeftHandNav"
-      screenOptions={{headerShown: false, ...getPlatformSpecificScreenAnimations()}}
-    >
-        <Stack.Screen
-          name="LeftHandNav"
-          component={LeftHandNav}
-        />
-        <Stack.Screen
-          name="Chat"
-          component={ChatScreen}
-          initialParams={{ id: 1 }} />
-        <Stack.Screen
-          name="RightHandStack"
-          component={RightHandStackNavigator}
-        />
-    </Stack.Navigator>
-  )
-}
-
-const WebStack = createWebNavigator();
-const NativeStack = createNativeStackNavigator();
+const ResponsiveStack = createWebNavigator();
 
 const RightHandStack = createPlatformSpecificStackNavigator();
 const SettingsStack = createPlatformSpecificStackNavigator();
 
-const WebNavigator = createMainStack(WebStack);
-const NativeNavigator= createMainStack(NativeStack);
 
 export default class App extends React.Component {
   constructor(props) {
@@ -355,28 +324,18 @@ export default class App extends React.Component {
     }
   }
   
-  handleInitialState(url) {
-    // we don't want to set initialState for mobile or if application is opened using deeplinks
-    if (Platform.OS !== 'web' && url !== null) {
-      return;
-    }
-    this.setState({navigationState: getStateFromPath('', config)})
-  }
-
   componentDidMount() {
     this.handleResize = this.handleResize.bind(this);
-    this.handleRotate= this.handleRotate.bind(this);
-    this.handleInitialState = this.handleInitialState.bind(this);
-    this.getInitialState= this.getInitialState.bind(this);
+    this.handleRotate = this.handleRotate.bind(this);
+    this.getInitialState = this.getInitialState.bind(this);
     Dimensions.addEventListener('change', this.handleResize)
     ScreenOrientation.addOrientationChangeListener(this.handleRotate)
     ScreenOrientation.getOrientationAsync().then((e) => {this.setState({isPortrait: checkIsPortrait(e)})})
-    Linking.getInitialURL().then(this.handleInitialState)
   }
   
   getInitialState() {
-    if (this.state.navigationState) {
-      return fixState(this.state.navigationState)
+    if (this.state.navigationState && this.state.isSmallScreen) {
+      return ensureChatRouteOnStack(this.state.navigationState)
     }
     return this.state.navigationState
   }
@@ -390,10 +349,8 @@ export default class App extends React.Component {
           justifyContent: 'center',
           paddingTop: Constants.statusBarHeight,
           backgroundColor: '#ecf0f1',
-          padding: 8,
         }}>
           <NavigationContainer
-            ref={navigationRef}
             linking={linking}
             theme={navTheme}
             key={isNarrowLayout ? 'native' : 'web'}
@@ -403,11 +360,24 @@ export default class App extends React.Component {
             }}
             initialState={this.getInitialState()}
           >
-            {isNarrowLayout ? (
-              <NativeNavigator />
-            ) : (
-              <WebNavigator />
-            )}
+              <ResponsiveStack.Navigator
+                initialRouteName="LeftHandNav"
+                screenOptions={{headerShown: false, ...getPlatformSpecificScreenAnimations()}}
+                isNarrowLayout={isNarrowLayout}
+              >
+                  <ResponsiveStack.Screen
+                    name="LeftHandNav"
+                    component={LeftHandNav}
+                  />
+                  <ResponsiveStack.Screen
+                    name="Chat"
+                    component={ChatScreen}
+                    initialParams={{ id: 1 }} />
+                  <ResponsiveStack.Screen
+                    name="RightHandStack"
+                    component={RightHandStackNavigator}
+                  />
+              </ResponsiveStack.Navigator>
           </NavigationContainer>
         </View>
       </IsSmallScreenContext.Provider>
