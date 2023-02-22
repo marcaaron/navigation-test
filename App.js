@@ -6,10 +6,10 @@ import {Text, View, Image, Pressable, Dimensions, Platform}  from 'react-native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createStackNavigator } from '@react-navigation/stack';
 import Constants from 'expo-constants';
-import createWebNavigator from './createWebNavigator';
 import * as Linking from 'expo-linking';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { CardStyleInterpolators } from '@react-navigation/stack';
+import createResponsiveNavigator from './createResponsiveNavigator';
 
 
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
@@ -294,7 +294,7 @@ const navTheme = {
 
 const IsSmallScreenContext = React.createContext();
 
-const ResponsiveStack = createWebNavigator();
+const ResponsiveStack = createResponsiveNavigator();
 
 const RightHandStack = createPlatformSpecificStackNavigator();
 const SettingsStack = createPlatformSpecificStackNavigator();
