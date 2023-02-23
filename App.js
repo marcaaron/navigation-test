@@ -7,7 +7,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createStackNavigator } from '@react-navigation/stack';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { CardStyleInterpolators } from '@react-navigation/stack';
 import createResponsiveNavigator from './createResponsiveNavigator';
 
@@ -79,8 +78,7 @@ const linking = {
   }
 };
 
-const checkIsSmallScreen = (width) => width <= 800;
-const checkIsPortrait = (screenOrientation) => screenOrientation == 1;
+const checkIsSmallScreen = (width) => width <= 700;
 
 const useFocusedRouteParams = () => {
   const state = useNavigationState(state => state)
@@ -317,20 +315,10 @@ export default class App extends React.Component {
     }
   }
 
-  handleRotate(e) {
-    const isPortrait = checkIsPortrait(e.orientationInfo.orientation)
-    if (isPortrait !== this.state.isPortrait) {
-      this.setState({isPortrait})        
-    }
-  }
-  
   componentDidMount() {
     this.handleResize = this.handleResize.bind(this);
-    this.handleRotate = this.handleRotate.bind(this);
     this.getInitialState = this.getInitialState.bind(this);
     Dimensions.addEventListener('change', this.handleResize)
-    ScreenOrientation.addOrientationChangeListener(this.handleRotate)
-    ScreenOrientation.getOrientationAsync().then((e) => {this.setState({isPortrait: checkIsPortrait(e)})})
   }
   
   getInitialState() {
@@ -341,7 +329,6 @@ export default class App extends React.Component {
   }
 
   render() {
-    const isNarrowLayout = Platform.OS == 'web' ? this.state.isSmallScreen : this.state.isPortrait;
     return (
       <IsSmallScreenContext.Provider value={isNarrowLayout}>
         <View style={{
@@ -353,7 +340,7 @@ export default class App extends React.Component {
           <NavigationContainer
             linking={linking}
             theme={navTheme}
-            key={isNarrowLayout ? 'native' : 'web'}
+            key={this.state.isSmallScreen? 'narrow' : 'wide'}
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
               this.navigationStateRef.current = state;

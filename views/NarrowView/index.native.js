@@ -1,4 +1,4 @@
-import {NativeStackView} from '@react-navigation/native'
+import {NativeStackView} from '@react-navigation/native-stack'
 
 const NarrowView = (props) => ( <NativeStackView {...props}/> );
 
