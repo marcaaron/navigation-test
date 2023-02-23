@@ -334,7 +334,7 @@ export default class App extends React.Component {
   }
   
   getInitialState() {
-    if (this.state.navigationState && this.state.isSmallScreen) {
+    if (this.state.navigationState && !this.state.isSmallScreen) {
       return ensureChatRouteOnStack(this.state.navigationState)
     }
     return this.state.navigationState
