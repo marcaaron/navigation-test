@@ -8,15 +8,15 @@ import {
 import NarrowView from "./views/NarrowView";
 import WideView from "./views/WideView";
 
-function CustomStackNavigator(props) {
-  const { navigation, state, descriptors, NavigationContent, ...rest } =
+function CustomStackNavigator({children, screenOptions, initialRouteName, isNarrowLayout, ...rest}) {
+  const { navigation, state, descriptors, NavigationContent } =
     useNavigationBuilder(StackRouter, {
-      children: props.children,
-      screenOptions: props.screenOptions,
-      initialRouteName: props.initialRouteName,
+      children: children,
+      screenOptions: screenOptions,
+      initialRouteName: initialRouteName,
     });
 
-  if (props.isNarrowLayout) {
+  if (isNarrowLayout) {
     return (
       <NavigationContent>
         <NarrowView
