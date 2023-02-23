@@ -303,9 +303,9 @@ const SettingsStack = createPlatformSpecificStackNavigator();
 export default class App extends React.Component {
   constructor(props) {
     super(props);
+    this.navigationStateRef = React.createRef();
     this.state = {
       isSmallScreen: checkIsSmallScreen(Dimensions.get('window').width),
-      navigationState: null,
       isPortrait: null,
     }
   }
@@ -334,10 +334,10 @@ export default class App extends React.Component {
   }
   
   getInitialState() {
-    if (this.state.navigationState && !this.state.isSmallScreen) {
-      return ensureChatRouteOnStack(this.state.navigationState)
+    if (this.navigationStateRef.current && !this.state.isSmallScreen) {
+      return ensureChatRouteOnStack(this.navigationStateRef.current)
     }
-    return this.state.navigationState
+    return this.navigationStateRef.current
   }
 
   render() {
@@ -356,7 +356,7 @@ export default class App extends React.Component {
             key={isNarrowLayout ? 'native' : 'web'}
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
-              this.setState({navigationState: state})
+              this.navigationStateRef.current = state;
             }}
             initialState={this.getInitialState()}
           >
