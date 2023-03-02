@@ -1,86 +1,108 @@
 import 'react-native-gesture-handler';
 import _ from 'underscore';
 import * as React from 'react';
-import {NavigationContainer, DefaultTheme, CommonActions, getStateFromPath, useFocusEffect} from '@react-navigation/native';
-import {Text, View, Image, Pressable, Linking, Platform, BackHandler, Dimensions} from 'react-native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {NavigationContainer, DefaultTheme,  getStateFromPath, createNavigationContainerRef, useNavigationState } from '@react-navigation/native';
+import {Text, View, Image, Pressable, Dimensions, Platform}  from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import Constants from 'expo-constants';
-import createWebNavigator from './createWebNavigator';
+import * as Linking from 'expo-linking';
+import { CardStyleInterpolators } from '@react-navigation/stack';
+import createResponsiveNavigator from './createResponsiveNavigator';
+
 
 const chevronStyle = {width: 30, height: 30, resizeMode: 'contain', marginRight: 10};
 const chatTitleStyle = {fontSize: 18, fontWeight: 'bold'};
 const titleStyle = {fontSize: 24, fontWeight: 'bold', flex: 1};
 
 const config = {
-  initialRouteName: '',
+  initialRouteName: 'LeftHandNav',
   screens: {
-    Chat: 'r/:id?',
-    LeftHandNav: '',
-    SettingsStack: {
-      screens: {
-        Settings: 'settings',
-        About: 'settings/about',
-      },
+    Chat: { 
+      path: 'r/:id?', 
+      parse: { id: (id) => parseInt(id) } 
     },
-    Search: 'search'
+    LeftHandNav: '',
+    RightHandStack: {
+      screens: {
+        SettingsStack: {
+          path: 'settings',
+          screens: {
+            Settings: '',
+            About: 'about',
+          },
+        },
+        Search: 'search'
+      }
+    }
   },
 };
 
+// NativeStackNavigator doesn't have animations on web
+const createPlatformSpecificStackNavigator = () => Platform.OS == 'web' ? createStackNavigator() : createNativeStackNavigator()
+
+const getPlatformSpecificScreenAnimations = () => {
+  if (Platform.OS === "web") {
+    return {
+      // iOS like animations 
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+      // by default this value is false on web
+      animationEnabled: true,
+    };
+  } else if (Platform.OS === "android") {
+    return {
+      // We have less possibilities on NativeStack but slide_from_right work fine
+      animation: 'slide_from_right'
+    };
+  }
+  // Animations for iOS are good enought by default 
+  return {};
+};
+
+const ensureChatRouteOnStack = (state) => {
+  if (!_.find(state.routes, r => r.name === 'Chat')) {
+    state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
+  }
+  return state;
+}
+
 const linking = {
-  prefixes: ['http://localhost', 'https://navigation-test-lime.vercel.app'],
+  prefixes: ['http://localhost', 'https://navigation-test-lime.vercel.app', Linking.createURL('/')],
   config,
   getStateFromPath(path, cfg) {
     const state = getStateFromPath(path, cfg);
-    console.log('Get state from path: ', state);
-
-    // We need to add the LHN if it does not exist
-    if (!_.find(state.routes, r => r.name === 'LeftHandNav')) {
-      state.routes.splice(0, 0, {name: 'LeftHandNav'});
+    if (!checkIsSmallScreen(Dimensions.get('window').width)) {
+      ensureChatRouteOnStack(state)
     }
-
-    if (!_.find(state.routes, r => r.name === 'Chat')) {
-      state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
-    }
-
     return state;
   }
 };
 
-const isSmallScreenWidth = Dimensions.get('window').width <= 800;
+const checkIsSmallScreen = (width) => width <= 700;
 
-/**
- * By default the back handler will pop. We want it to go "back" instead of "up". All screens that are inside a nested navigator
- * except the root screen of that nested navigator will need to implement this.
- */
-function WithCustomBackBehavior(props) {
-  useFocusEffect(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      props.navigation.popToTop();
-    });
-
-    return () => subscription.remove();
-  });
-
-  return props.children;
+const useFocusedRouteParams = () => {
+  const state = useNavigationState(state => state)
+  return state.routes?.[state.index]?.params
 }
 
 function LeftHandNav({navigation}) {
+  const focusedRouteParams = useFocusedRouteParams();
   return (
     <View style={{flex: 1}}>
       <LHNHeader navigation={navigation} />
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 1})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} disabled={focusedRouteParams?.id === 1} onPress={() => navigation.push('Chat', {id: 1})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_4.png'}} />
         </View>
         <Text style={chatTitleStyle}>Chat One</Text>
       </Pressable>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 2})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} disabled={focusedRouteParams?.id === 2} onPress={() => navigation.push('Chat', {id: 2})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_5.png'}} />
         </View>
         <Text style={chatTitleStyle}>Chat Two</Text>
       </Pressable>
-      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} onPress={() => navigation.push('Chat', {id: 3})}>
+      <Pressable style={{flexDirection: 'row', margin: 10, alignItems: 'center'}} disabled={focusedRouteParams?.id === 3} onPress={() => navigation.push('Chat', {id: 3})}>
         <View style={{borderRadius: 22.5, overflow: 'hidden', marginRight: 10}}>
           <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
         </View>
@@ -90,29 +112,40 @@ function LeftHandNav({navigation}) {
   );
 }
 
+// This function checks if the target route is one pop() away.
+// If yes - then call pop()
+// If not - it is going to replace() with given targer. 
+// You can think about this as a variation of "navigation.navigate"
+const navigateUp = (navigation, screenName) => {
+  const state = navigation.getState()
+  if (state.index > 0 && state.routes[state.index - 1].name === screenName) {
+    navigation.pop()
+  } else {
+    navigation.replace(screenName)
+  }
+}
+
 function AboutScreen({navigation}) {
   return (
-    <WithCustomBackBehavior navigation={navigation}>
-      <View style={{margin: 10}}>
-        <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Pressable onPress={() => navigation.pop()}>
-            <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
-          </Pressable>
-          <Text style={titleStyle}>About</Text>
-        </View>
-        <Text style={{fontSize: 20, marginBottom: 20}}>Welcome to my test app</Text>
-        <Pressable
-            onPress={() => navigation.push('Chat', {id: 1})}
-          >
-            <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
+    <View style={{margin: 10}}>
+      <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
+        <Pressable onPress={() => navigateUp(navigation, 'Settings')}>
+          <Image style={chevronStyle} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/chevron.png'}} />
         </Pressable>
-        <Pressable
-            onPress={() => navigation.push('Search')}
-          >
-            <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to Search page</Text>
-        </Pressable>
+        <Text style={titleStyle}>About</Text>
       </View>
-    </WithCustomBackBehavior>
+      <Text style={{fontSize: 20, marginBottom: 20}}>Welcome to my test app</Text>
+      <Pressable
+          onPress={() => navigation.push('Chat', {id: 1})}
+        >
+          <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
+      </Pressable>
+      <Pressable
+          onPress={() => navigation.push('Search')}
+        >
+          <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to Search page</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -121,10 +154,10 @@ function LHNHeader({navigation}) {
     <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}>
       <Text style={{fontSize: 24, fontWeight: 'bold', marginLeft: 10}}>Chats</Text>
       <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginRight: 10, marginTop: 10}}>
-        <Pressable style={{marginRight: 20}} onPress={() => navigation.push('Search')}>
+        <Pressable style={{marginRight: 20}} onPress={() => navigation.push('RightHandStack', { screen: 'Search' })}>
           <Image style={{width: 30, height: 30}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/search.png'}} />
         </Pressable>
-        <Pressable onPress={() => navigation.push('SettingsStack')}>
+        <Pressable onPress={() => navigation.push('RightHandStack', { screen :'SettingsStack' })}>
           <View style={{borderRadius: 22.5, overflow: 'hidden'}}>
             <Image style={{width: 45, height: 45}} source={{uri: 'https://raw.githubusercontent.com/marcaaron/navigation-test/main/avatar_3.png'}} />
           </View>
@@ -178,10 +211,11 @@ function SettingsScreen({navigation}) {
 }
 
 function ChatScreen({route, navigation}) {
+  const isSmallScreen = React.useContext(IsSmallScreenContext);
   return (
     <View style={{margin: 10}}>
         <View style={{marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-start'}}>
-          {isSmallScreenWidth && (
+          {isSmallScreen && (
               <Pressable onPress={() => {
                 if (navigation.canGoBack()) {
                   navigation.goBack();
@@ -204,7 +238,7 @@ function ChatScreen({route, navigation}) {
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to another chat</Text>
         </Pressable>
         <Pressable
-          onPress={() => navigation.push('SettingsStack', { screen: 'About', initial: false })}
+          onPress={() => navigation.push('RightHandStack', { screen: 'SettingsStack', params: {screen: 'About'} })}
         >
           <Text style={{color: 'blue', fontSize: 18, marginBottom: 10}}>Link to About</Text>
         </Pressable>
@@ -212,17 +246,42 @@ function ChatScreen({route, navigation}) {
   );
 }
 
-const Stack = isSmallScreenWidth ? createNativeStackNavigator() : createWebNavigator();
-const SettingsStack = createNativeStackNavigator();
-
-const SettingsStackNavigator = () => (
+const SettingsStackNavigator = ({ navigation }) => {
+  return (
   <SettingsStack.Navigator
-    initialRouteName="Settings"
+    screenOptions={{
+      headerShown: false,
+      ...getPlatformSpecificScreenAnimations()
+    }}
   >
-    <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{headerShown: false}} />
-    <SettingsStack.Screen name="About" component={AboutScreen} options={{headerShown: false}} />
+    <SettingsStack.Screen 
+      name="Settings" 
+      component={SettingsScreen} 
+      options={{
+        animationTypeForReplace: 'pop',
+    }} />
+    <SettingsStack.Screen name="About" component={AboutScreen} />
   </SettingsStack.Navigator>
-);
+)};
+
+const RightHandStackNavigator = ({ navigation }) => {
+  return (
+    <RightHandStack.Navigator
+      screenOptions={{
+        ...getPlatformSpecificScreenAnimations(),
+        headerShown: false,
+      }}
+    >
+      <RightHandStack.Screen
+        name="Search"
+        component={SearchScreen}
+      />
+      <RightHandStack.Screen
+        name="SettingsStack"
+        component={SettingsStackNavigator}
+      />
+    </RightHandStack.Navigator>
+)};
 
 const navTheme = {
   ...DefaultTheme,
@@ -231,94 +290,84 @@ const navTheme = {
   },
 };
 
+const IsSmallScreenContext = React.createContext();
+
+const ResponsiveStack = createResponsiveNavigator();
+
+const RightHandStack = createPlatformSpecificStackNavigator();
+const SettingsStack = createPlatformSpecificStackNavigator();
+
+
 export default class App extends React.Component {
   constructor(props) {
     super(props);
+    this.navigationStateRef = React.createRef();
     this.state = {
-      initialState: null,
-    };
+      isSmallScreen: checkIsSmallScreen(Dimensions.get('window').width),
+      isPortrait: null,
+    }
+  }
+  
+  handleResize(e) {
+    const isSmallScreen = checkIsSmallScreen(e.window.width);
+    if (isSmallScreen !== this.state.isSmallScreen) {
+      this.setState({isSmallScreen})        
+    }
   }
 
   componentDidMount() {
-    Linking.getInitialURL().then((url) => {
-      if (Platform.OS !== 'web') {
-        this.setState({initialState: getStateFromPath('', config)});
-        return;
-      }
-
-      // From here we'll have a url and we need to build the initial state for the app
-      // This is where things get tricky because if we have a report route then we need to parse the reportID and also make sure a LHN is the root view
-      const pathname = new URL(url).pathname;
-      const state = getStateFromPath(pathname, config);
-
-      // If pathname is a chat then we need to push a left hand nav path
-      if (pathname.startsWith('/r') || pathname.startsWith('/search') || pathname.startsWith('/settings')) {
-        state.routes.unshift({name: 'LeftHandNav'});
-      }
-
-      // Since About is in a Settings stack we want the "up" button to go back to the Settings main page and so need to define this
-      if (pathname === '/settings/about') {
-        state.routes[1].state.routes.unshift({name: 'Settings'});
-      }
-
-      // Add a report when we are on large format web and a chat does not exist in the route
-      if (!isSmallScreenWidth && !state.routes.find(route => route.name === 'Chat')) {
-          state.routes.splice(1, 0, {name: 'Chat', params: {id: 1}});
-      }
-
-      this.setState({initialState: state});
-    });
+    this.handleResize = this.handleResize.bind(this);
+    this.getInitialState = this.getInitialState.bind(this);
+    Dimensions.addEventListener('change', this.handleResize)
+  }
+  
+  getInitialState() {
+    if (this.navigationStateRef.current && !this.state.isSmallScreen) {
+      return ensureChatRouteOnStack(this.navigationStateRef.current)
+    }
+    return this.navigationStateRef.current
   }
 
   render() {
-    if (!this.state.initialState) {
-      return null;
-    }
-
     return (
+      <IsSmallScreenContext.Provider value={this.state.isSmallScreen}>
         <View style={{
           flex: 1,
           justifyContent: 'center',
           paddingTop: Constants.statusBarHeight,
           backgroundColor: '#ecf0f1',
-          padding: 8,
         }}>
           <NavigationContainer
             linking={linking}
             theme={navTheme}
+            key={this.state.isSmallScreen? 'narrow' : 'wide'}
             onStateChange={(state) => {
               console.log('STATE CHANGED: ', state);
+              this.navigationStateRef.current = state;
             }}
-            initialState={this.state.initialState}
+            initialState={this.getInitialState()}
           >
-            <Stack.Navigator
-              initialRouteName="LeftHandNav"
-            >
-                <Stack.Screen
-                  name="LeftHandNav"
-                  component={LeftHandNav}
-                  options={{headerShown: false}}
-                />
-                <Stack.Screen
-                  name="Chat"
-                  component={ChatScreen}
-                  options={{headerShown: false}}
-                  initialParams={{ id: 1 }} />
-                <Stack.Group>
-                  <Stack.Screen
-                    name="Search"
-                    component={SearchScreen}
-                    options={{headerShown: false}}
+              <ResponsiveStack.Navigator
+                initialRouteName="LeftHandNav"
+                screenOptions={{headerShown: false, ...getPlatformSpecificScreenAnimations()}}
+                isNarrowLayout={this.state.isSmallScreen}
+              >
+                  <ResponsiveStack.Screen
+                    name="LeftHandNav"
+                    component={LeftHandNav}
                   />
-                  <Stack.Screen
-                    name="SettingsStack"
-                    component={SettingsStackNavigator}
-                    options={{headerShown: false}}
+                  <ResponsiveStack.Screen
+                    name="Chat"
+                    component={ChatScreen}
+                    initialParams={{ id: 1 }} />
+                  <ResponsiveStack.Screen
+                    name="RightHandStack"
+                    component={RightHandStackNavigator}
                   />
-                </Stack.Group>
-            </Stack.Navigator>
+              </ResponsiveStack.Navigator>
           </NavigationContainer>
         </View>
+      </IsSmallScreenContext.Provider>
     );
   }
 }

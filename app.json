@@ -1,9 +1,9 @@
 {
   "expo": {
+    "scheme": "navigation-test",
     "name": "expensify-navigation-test",
     "slug": "snack-4cac37e7-bcd2-4ea0-9cd4-e255739531ab",
     "version": "1.0.0",
-    "orientation": "portrait",
     "owner": "marcaaron",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -27,6 +27,14 @@
         "backgroundColor": "#FFFFFF"
       }
     },
+    "plugins": [
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
