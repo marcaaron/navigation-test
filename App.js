@@ -330,7 +330,7 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <IsSmallScreenContext.Provider value={isNarrowLayout}>
+      <IsSmallScreenContext.Provider value={this.state.isSmallScreen}>
         <View style={{
           flex: 1,
           justifyContent: 'center',
@@ -350,7 +350,7 @@ export default class App extends React.Component {
               <ResponsiveStack.Navigator
                 initialRouteName="LeftHandNav"
                 screenOptions={{headerShown: false, ...getPlatformSpecificScreenAnimations()}}
-                isNarrowLayout={isNarrowLayout}
+                isNarrowLayout={this.state.isSmallScreen}
               >
                   <ResponsiveStack.Screen
                     name="LeftHandNav"
